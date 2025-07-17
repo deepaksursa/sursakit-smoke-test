@@ -1,0 +1,42 @@
+{
+  "name": "sursakit-smoke-test",
+  "version": "1.0.0",
+  "description": "Production-ready test automation framework for junior developers - Playwright + TypeScript + Page Object Model",
+  "scripts": {
+    "test": "playwright test --headed",
+    "test:headless": "playwright test",
+    "test:debug": "playwright test --debug",
+    "test:smoke": "playwright test tests/",
+    "test:regression": "playwright test tests/regression/",
+    "test:examples": "playwright test examples/",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "report:open": "playwright show-report --host 0.0.0.0",
+    "clean": "rm -rf test-results",
+    "clean:all": "rm -rf test-results playwright-report",
+    "install:browsers": "playwright install",
+    "setup": "npm install && playwright install",
+    "framework:demo": "playwright test examples/complete-example.spec.ts --headed",
+    "framework:template": "echo 'Copy templates/test-template.spec.ts to create new tests'",
+    "help": "echo 'Available commands: test, test:headless, test:debug, test:smoke, test:regression, test:examples, report, clean, setup, framework:demo, framework:template'"
+  },
+  "keywords": [
+    "playwright",
+    "typescript", 
+    "test-automation",
+    "page-object-model",
+    "junior-developers",
+    "framework"
+  ],
+  "author": "Your Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
