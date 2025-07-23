@@ -1,93 +1,152 @@
-import { Page, Locator } from '@playwright/test';
-import { BasePage } from './BasePage';
+import { Page, Locator, expect } from "@playwright/test";
+import { BasePage } from "./BasePage";
 
-/**
- * Home Page Object - Handles homepage interactions
- * 
- * Encapsulates:
- * - Navigation elements
- * - Sign In button location
- * - Homepage validation
- */
 export class HomePage extends BasePage {
-  
-  // Selector arrays for flexible element location
   private signInSelectors = [
     'text="Sign In"',
-    'text="Login"', 
+    'text="Login"',
     'text="Sign in"',
     'text="Log in"',
     '[href*="sign-in"]',
     '[href*="login"]',
     'button:has-text("Sign In")',
-    'a:has-text("Sign In")'
+    'a:has-text("Sign In")',
+  ];
+
+  //Organization Selectors
+
+  private createOrgBtnsSelectors = [
+    'button:has-text("Create new organization")',
+    '[data-slot="dropdown-menu-item"]:has-text("Create new organization")',
+  ];
+
+  private orgNameInputSelectors = [
+    'form input:near(:text("Organization Name"))',
+    'form input[name="name"]',
+  ];
+
+  private orgDropDownTriggerSelectors = [
+    'button[data-slot="dropdown-menu-trigger"]',
+  ];
+
+  private createButtonSelectors = ['button[type="submit"]:has-text("Create")'];
+
+  //Workspace Selectors
+
+  private createWorkspaceButtonSelectors = [
+    'button:has-text("Create empty workspace")',
+  ];
+  private createWorkspaceInputSelectors = [
+    'div[role="dialog"] input[placeholder="workspace name"]',
   ];
 
   constructor(page: Page) {
     super(page);
   }
 
-  /**
-   * Navigate to homepage
-   */
   async navigateToHome(): Promise<void> {
-    await this.navigate('/');
+    await this.navigate("/");
   }
 
-  /**
-   * Get Sign In button element
-   */
   async getSignInButton(): Promise<Locator> {
     const element = await this.findElement(this.signInSelectors);
-    if (!element) {
-      await this.takeScreenshot('signin-button-not-found');
-      
-      // List available elements for debugging
-      const links = await this.page.locator('a').allTextContents();
-      const buttons = await this.page.locator('button').allTextContents();
-      console.log('🔍 Available links:', links);
-      console.log('🔍 Available buttons:', buttons);
-      
-      throw new Error('Sign In button not found. Check screenshot and available elements above.');
-    }
     return element;
   }
 
-  /**
-   * Click Sign In button to navigate to login
-   */
   async clickSignIn(): Promise<void> {
     const signInButton = await this.getSignInButton();
     await signInButton.click();
-    console.log('✅ Clicked Sign In button');
-    
-    // Wait for navigation
+    console.log("✅ Clicked Sign In button");
     await this.page.waitForTimeout(2000);
   }
 
-  /**
-   * Navigate to login page via Sign In button
-   */
   async goToLogin(): Promise<void> {
     await this.clickSignIn();
-    // Use a more forgiving wait instead of networkidle for navigation
-    await this.page.waitForTimeout(2000); // Give time for navigation to start
+    await this.page.waitForTimeout(2000);
   }
 
-  /**
-   * Check if we're on the homepage
-   */
   isOnHomePage(): boolean {
     const url = this.getCurrentUrl();
-    return url.endsWith('/') ||
-           url.includes('localhost:5173') ||
-           (!this.isUrlContaining('auth') && !this.isUrlContaining('login'));
+    return (
+      url.endsWith("/") ||
+      url.includes("localhost:5173") ||
+      (!this.isUrlContaining("auth") && !this.isUrlContaining("login"))
+    );
   }
 
-  /**
-   * Get all navigation links
-   */
   async getNavigationLinks(): Promise<string[]> {
-    return await this.page.locator('nav a, header a').allTextContents();
+    return await this.page.locator("nav a, header a").allTextContents();
   }
-} 
+
+  // Organization Creation
+
+  async clickCreateOrgBtn() {
+    const element = await this.findElement(this.createOrgBtnsSelectors);
+    await element.click();
+    console.log("Create organization button clicked");
+  }
+
+  async isCreateOrgModalVisible() {
+    const modal = await this.waitForElement(this.orgNameInputSelectors);
+    expect(modal).toBeTruthy();
+  }
+
+  async fillOrgName(orgName: string): Promise<void> {
+    const input = await this.findElement(this.orgNameInputSelectors);
+    await input.fill(orgName);
+    console.log(`Organization name entered: ${orgName}`);
+  }
+
+  async clickCreate(): Promise<void> {
+    const button = await this.findElement(this.createButtonSelectors);
+    await button.click();
+  }
+
+  async verifyOrganizationCreation(name: string) {
+    const trigger = await this.findElement(this.orgDropDownTriggerSelectors);
+    await trigger.click();
+    const orgItem = this.page.locator('[role="menuitem"]', {
+      hasText: name,
+    });
+    await expect(orgItem).toBeVisible();
+    //Choose the created organization
+    await orgItem.click();
+  }
+
+  async createNewOrganization(organizationName: string) {
+    await this.clickCreateOrgBtn();
+    await this.isCreateOrgModalVisible();
+    await this.fillOrgName(organizationName);
+    await this.clickCreate();
+    await this.verifyOrganizationCreation(organizationName);
+  }
+
+  //Workspace Creation
+
+  async clickCreateWorkspace() {
+    const button = await this.findElement(this.createWorkspaceButtonSelectors);
+    await button.click();
+    console.log("Clicked create workspace");
+  }
+
+  async isCreateWorkSpaceModalVisible() {
+    const modal = await this.waitForElement(this.createWorkspaceInputSelectors);
+    expect(modal).toBeTruthy();
+  }
+
+  async fillWorkSpaceName(workspaceName: string) {
+    const input = await this.findElement(this.createWorkspaceInputSelectors);
+    await input.fill(workspaceName);
+    console.log(`Workspace name entered: ${workspaceName}`);
+  }
+
+  async createNewWorkspace(workspaceName: string) {
+    await this.clickCreateWorkspace();
+    await this.isCreateWorkSpaceModalVisible();
+    await this.fillWorkSpaceName(workspaceName);
+    await this.clickCreate();
+    //check if user navigates inside the workspace to confirm workspace creation
+    await expect(this.page).toHaveURL(/\/s\/[a-z0-9]+$/);
+    console.log("Workspace created");
+  }
+}
