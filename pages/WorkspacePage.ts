@@ -4,9 +4,6 @@ import path from "path";
 
 export class WorkspacePage extends BasePage {
   private addButtonSelectors = ["button:has(svg.lucide-plus)"];
-  private actionsModalSelectors = [
-    '[data-slot="dropdown-menu-label"]:has-text("Actions")',
-  ];
 
   private createServiceModalSelectors = [
     '[role="dialog"]:has(h2:text("Create New Service"))',
@@ -36,14 +33,11 @@ export class WorkspacePage extends BasePage {
     console.log("Clicked on add.");
   }
 
-  async isActionsModalOpen() {
-    await this.waitForElement(this.actionsModalSelectors);
-  }
-
   async clickOnEmptyService() {
     const emptyServiceBtn = this.page.getByRole("menuitem", {
       name: "Empty service",
     });
+    await expect(emptyServiceBtn).toBeVisible();
     await emptyServiceBtn.click();
     console.log("Clicked on empty service");
   }
@@ -64,7 +58,6 @@ export class WorkspacePage extends BasePage {
 
   async createEmptyService(serviceName: string) {
     await this.clickOnAdd();
-    await this.isActionsModalOpen();
     await this.clickOnEmptyService();
     await this.isCreateServiceModalOpen();
     await this.fillCreateService(serviceName);
@@ -73,14 +66,17 @@ export class WorkspacePage extends BasePage {
     );
     //verify service creation
     await expect(
-      this.page.getByText(serviceName.split(" ").join("-"))
+      this.page.getByRole("button", {
+        name: `${serviceName.split(" ").join("-")}`,
+        exact: true,
+      })
     ).toBeVisible();
     console.log(`Service "${serviceName}" created successfully.`);
   }
 
-  async clickOnServiceTab() {
+  async clickOnServiceTab(serviceName: string) {
     const serivceTab = this.page.getByRole("button", {
-      name: "Test-Service",
+      name: `${serviceName.split(" ").join("-")}`,
       exact: true,
     });
     await serivceTab.click();
@@ -88,8 +84,8 @@ export class WorkspacePage extends BasePage {
   }
 
   //upload File into the service
-  async uploadFile() {
-    await this.clickOnServiceTab();
+  async uploadFile(serviceName: string) {
+    await this.clickOnServiceTab(serviceName);
     const uploadButton = this.page
       .getByLabel("File explorer")
       .getByRole("button")
@@ -113,7 +109,7 @@ export class WorkspacePage extends BasePage {
     await fileChooser.setFiles(folderPath);
     await expect(
       this.page.getByRole("button", { name: "test-project", exact: true })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 20000 });
   }
 
   async clickFileTab(fileName: string) {
@@ -124,8 +120,8 @@ export class WorkspacePage extends BasePage {
     await newFileTab.click();
   }
 
-  async createNewFile(fileName: string) {
-    await this.clickOnServiceTab();
+  async createNewFile(fileName: string, serviceName: string) {
+    await this.clickOnServiceTab(serviceName);
     const addNewFileBtn = this.page.getByRole("button", { name: "New File" });
     await addNewFileBtn.click();
     const fileNameInput = this.page.getByRole("textbox", {
@@ -142,7 +138,7 @@ export class WorkspacePage extends BasePage {
     console.log("File created");
   }
 
-  async codeEditorCheck() {
+  async codeEditorCheck(fileName: string) {
     const editor = this.page.locator(".view-lines");
     await editor.click();
     await this.page.keyboard.type("const x = 42;");
@@ -157,13 +153,33 @@ export class WorkspacePage extends BasePage {
       exact: true,
     });
     await saveButton.click();
-    await this.clickFileTab("Test-file.ts");
+    await this.clickFileTab(fileName);
     await expect(
       this.page
         .getByRole("code")
         .locator("div")
         .filter({ hasText: "const x = 42;" })
         .nth(3)
+    ).toBeVisible();
+  }
+
+  async addTerminal(serviceName: string) {
+    const addTerminalButton = this.page.getByRole("button", {
+      name: `Add ${serviceName.split(" ").join("-")} terminal`,
+    });
+    await addTerminalButton.click();
+    expect(
+      this.page
+        .getByRole("tab", {
+          name:
+            serviceName.length > 10
+              ? `${serviceName
+                  .split(" ")
+                  .join("-")
+                  .substring(0, 10)}... terminal`
+              : serviceName,
+        })
+        .first()
     ).toBeVisible();
   }
 }

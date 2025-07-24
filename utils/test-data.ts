@@ -22,6 +22,13 @@ interface TestUsers {
   // Future: adminUser, guestUser, etc.
 }
 
+interface TestData {
+  organizationName: string;
+  workspaceName: string;
+  serviceName: string;
+  fileName: string;
+}
+
 // Test Credentials - Uses environment variables with fallbacks
 export const TestCredentials: TestUsers = {
   validUser: {
@@ -36,6 +43,13 @@ export const TestCredentials: TestUsers = {
   // Future test users can be added here:
   // adminUser: { ... },
   // guestUser: { ... },
+};
+
+export const TestData: TestData = {
+  organizationName: "MyOrganization",
+  workspaceName: "MyWorkspace",
+  serviceName: "Service",
+  fileName: "Test.ts",
 };
 
 // Test Configuration

@@ -15,11 +15,6 @@ export class HomePage extends BasePage {
 
   //Organization Selectors
 
-  private createOrgBtnsSelectors = [
-    'button:has-text("Create new organization")',
-    '[data-slot="dropdown-menu-item"]:has-text("Create new organization")',
-  ];
-
   private orgNameInputSelectors = [
     'form input:near(:text("Organization Name"))',
     'form input[name="name"]',
@@ -81,8 +76,10 @@ export class HomePage extends BasePage {
   // Organization Creation
 
   async clickCreateOrgBtn() {
-    const element = await this.findElement(this.createOrgBtnsSelectors);
-    await element.click();
+    const createOrgBtn = this.page.getByRole("menuitem", {
+      name: "Create new organization",
+    });
+    await createOrgBtn.click();
     console.log("Create organization button clicked");
   }
 
@@ -119,6 +116,30 @@ export class HomePage extends BasePage {
     await this.fillOrgName(organizationName);
     await this.clickCreate();
     await this.verifyOrganizationCreation(organizationName);
+  }
+
+  //delete Organization
+  async deleteOrganization() {
+    await this.navigateToHome();
+    const orgButton = this.page.getByRole("button", {
+      name: "Test Organization",
+    });
+    await orgButton.click();
+    const orgSettingsButton = this.page.getByRole("button");
+    await orgSettingsButton.click();
+    const dangerTab = this.page.getByRole("button", { name: "Danger" });
+    await dangerTab.click();
+    const deleteOrganizationButton = this.page.getByRole("button", {
+      name: "Delete Organization",
+    });
+    await deleteOrganizationButton.click();
+    const confirmDeleteButton = this.page.getByRole("button", {
+      name: "Confirm Delete",
+    });
+    await confirmDeleteButton.click();
+    await expect(
+      this.page.getByRole("button", { name: "ai-power" })
+    ).toBeVisible();
   }
 
   //Workspace Creation
