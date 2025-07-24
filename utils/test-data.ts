@@ -46,10 +46,10 @@ export const TestCredentials: TestUsers = {
 };
 
 export const TestData: TestData = {
-  organizationName: "MyOrganization",
-  workspaceName: "MyWorkspace",
-  serviceName: "Service",
-  fileName: "Test.ts",
+  organizationName: "Test Organization",
+  workspaceName: "Test Worksapce",
+  serviceName: "Test Service",
+  fileName: "File.ts",
 };
 
 // Test Configuration

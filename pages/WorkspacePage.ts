@@ -182,4 +182,22 @@ export class WorkspacePage extends BasePage {
         .first()
     ).toBeVisible();
   }
+
+  async importFromGithub() {
+    await this.clickOnAdd();
+    const importFromGitHubBtn = this.page.getByRole("menuitem", {
+      name: "GitHub Import from GitHub",
+    });
+    await importFromGitHubBtn.click();
+    const selectRepoDropDown = this.page.getByRole("button", {
+      name: "Repository",
+    });
+    await selectRepoDropDown.click();
+    const repo = this.page.getByRole("button", {
+      name: "Aayush850/Project-HireWheels",
+    });
+    await repo.click();
+    const importBtn = this.page.getByRole("button", { name: "Import" });
+    await importBtn.click();
+  }
 }
