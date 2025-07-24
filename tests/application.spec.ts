@@ -19,7 +19,7 @@ test.describe("Applcation Functionality Test", () => {
       await homePage.goToLogin();
       await loginPage.performLogin(username, password);
     });
-    
+
     //Create Organization
     await test.step("Create Organization", async () => {
       await homePage.createNewOrganization("Test Organization");
@@ -30,10 +30,15 @@ test.describe("Applcation Functionality Test", () => {
       await homePage.createNewWorkspace("Test Workspace");
     });
 
-    //Create Service
+    //Create Empty Service
     await test.step("Create Service", async () => {
       await workspacePage.isOnWorkspacePage();
-      await workspacePage.createService("Test Service");
+      await workspacePage.createEmptyService("Test Service");
+    });
+
+    //UploadFile
+    await test.step("upload a file", async () => {
+      await workspacePage.uploadFile();
     });
   });
 });

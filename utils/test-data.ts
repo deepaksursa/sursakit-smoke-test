@@ -33,7 +33,6 @@ export const TestCredentials: TestUsers = {
     username: "invalid@example.com",
     password: "wrongpassword",
   },
-
   // Future test users can be added here:
   // adminUser: { ... },
   // guestUser: { ... },
