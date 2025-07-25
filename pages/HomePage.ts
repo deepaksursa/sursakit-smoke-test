@@ -119,10 +119,10 @@ export class HomePage extends BasePage {
   }
 
   //delete Organization
-  async deleteOrganization() {
+  async deleteOrganization(organizationName: string) {
     await this.navigateToHome();
     const orgButton = this.page.getByRole("button", {
-      name: "Test Organization",
+      name: organizationName,
     });
     await orgButton.click();
     const orgSettingsButton = this.page.getByRole("button");

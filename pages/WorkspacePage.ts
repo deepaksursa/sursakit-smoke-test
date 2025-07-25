@@ -138,12 +138,14 @@ export class WorkspacePage extends BasePage {
     console.log("File created");
   }
 
-  async codeEditorCheck(fileName: string) {
+  async writeOnEditor(fileName: string) {
     const editor = this.page.locator(".view-lines");
     await editor.click();
-    await this.page.keyboard.type("const x = 42;");
-    const closeButton = this.page.locator("button:has(svg.lucide-x)").nth(1);
+    await this.page.keyboard.type("console.log('Hello World')");
+  }
 
+  async closeFileAndSave(fileName: string) {
+    const closeButton = this.page.locator("button:has(svg.lucide-x)").nth(1);
     await closeButton.click();
     await expect(
       this.page.getByRole("alertdialog", { name: "Unsaved Changes" })
@@ -158,9 +160,18 @@ export class WorkspacePage extends BasePage {
       this.page
         .getByRole("code")
         .locator("div")
-        .filter({ hasText: "const x = 42;" })
+        .filter({ hasText: "console.log('Hello World')" })
         .nth(3)
     ).toBeVisible();
+  }
+
+  async refreshFiles() {
+    const refresFilesBtn = this.page
+      .getByLabel("File explorer")
+      .getByRole("button")
+      .filter({ hasText: /^$/ })
+      .nth(1);
+    await refresFilesBtn.click();
   }
 
   async addTerminal(serviceName: string) {
@@ -183,21 +194,28 @@ export class WorkspacePage extends BasePage {
     ).toBeVisible();
   }
 
-  async importFromGithub() {
-    await this.clickOnAdd();
-    const importFromGitHubBtn = this.page.getByRole("menuitem", {
-      name: "GitHub Import from GitHub",
+  async closeTerminal(serviceName: string) {
+    const closeTerminalButton = this.page.getByRole("button", {
+      name:
+        serviceName.length > 10
+          ? `${serviceName.split(" ").join("-").substring(0, 10)}... terminal`
+          : serviceName,
     });
-    await importFromGitHubBtn.click();
-    const selectRepoDropDown = this.page.getByRole("button", {
-      name: "Repository",
+    await closeTerminalButton.click();
+    await expect(closeTerminalButton).toBeHidden();
+  }
+
+  async testTerminal() {
+    const terminalInput = this.page.getByRole("textbox", {
+      name: "Terminal input",
     });
-    await selectRepoDropDown.click();
-    const repo = this.page.getByRole("button", {
-      name: "Aayush850/Project-HireWheels",
-    });
-    await repo.click();
-    const importBtn = this.page.getByRole("button", { name: "Import" });
-    await importBtn.click();
+    await expect(terminalInput).toBeVisible();
+    await terminalInput.click();
+    await this.page.keyboard.type("mkdir NewFolder");
+    await this.page.keyboard.press("Enter");
+    await this.refreshFiles();
+    await expect(
+      this.page.getByRole("button", { name: "NewFolder", exact: true })
+    ).toBeVisible();
   }
 }
