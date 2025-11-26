@@ -40,7 +40,7 @@ export class HomePage extends BasePage {
   }
 
   async navigateToHome(): Promise<void> {
-    await this.navigate("/");
+    await this.navigateWithCloudflareHandling("/");
   }
 
   async getSignInButton(): Promise<Locator> {

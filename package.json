@@ -7,8 +7,6 @@
     "test:headless": "playwright test",
     "test:debug": "playwright test --debug",
     "test:smoke": "playwright test tests/",
-    "test:regression": "playwright test tests/regression/",
-    "test:examples": "playwright test examples/",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
     "report:open": "playwright show-report --host 0.0.0.0",
@@ -16,9 +14,7 @@
     "clean:all": "rm -rf test-results playwright-report",
     "install:browsers": "playwright install",
     "setup": "npm install && playwright install",
-    "framework:demo": "playwright test examples/complete-example.spec.ts --headed",
-    "framework:template": "echo 'Copy templates/test-template.spec.ts to create new tests'",
-    "help": "echo 'Available commands: test, test:headless, test:debug, test:smoke, test:regression, test:examples, report, clean, setup, framework:demo, framework:template'"
+    "help": "echo 'Available commands: test, test:headless, test:debug, test:smoke, test:ui, report, clean, setup'"
   },
   "keywords": [
     "playwright",

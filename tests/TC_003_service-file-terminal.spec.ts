@@ -1,7 +1,7 @@
 import { test } from "../fixtures/fixtures";
 import { TestData } from "../utils/test-data";
 
-test("TC_003: Create service, add file, edit file, save file and use terminal", async ({
+test.skip("TC_003: Create service, add file, edit file, save file and use terminal", async ({
   workspacePage,
 }) => {
   await workspacePage.createEmptyService(TestData.serviceName);

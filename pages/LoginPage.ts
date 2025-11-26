@@ -59,10 +59,10 @@ export class LoginPage extends BasePage {
   }
 
   /**
-   * Navigate to login page
+   * Navigate to login page with Cloudflare handling
    */
   async navigateToLogin(): Promise<void> {
-    await this.navigate("/auth/sign-in");
+    await this.navigateWithCloudflareHandling("/auth/sign-in");
   }
 
   /**
@@ -135,13 +135,21 @@ export class LoginPage extends BasePage {
   async login(email: string, password: string): Promise<void> {
     console.log(`📝 Logging in with: ${email}`);
 
+    // Check for Cloudflare challenge before filling form
+    await this.waitForCloudflareChallenge();
+
     await this.fillEmail(email);
     await this.fillPassword(password);
     await this.takeScreenshot("form-filled");
+
+    // Check for Cloudflare challenge again before submitting
+    await this.waitForCloudflareChallenge();
+
     await this.clickSubmit();
 
-    // Wait for response
-    await this.page.waitForTimeout(3000);
+    // Wait for response and check for any post-submit challenges
+    await this.page.waitForTimeout(2000);
+    await this.waitForCloudflareChallenge(10000);
   }
 
   /**

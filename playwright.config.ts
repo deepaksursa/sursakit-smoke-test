@@ -37,6 +37,27 @@ export default defineConfig({
     // Browser configuration
     headless: process.env.HEADLESS === "true",
 
+    // Enhanced browser fingerprinting to bypass Cloudflare
+    // These settings make the browser look more like a real user
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    viewport: { width: 1920, height: 1080 },
+    locale: "en-US",
+    timezoneId: "America/New_York",
+
+    // Additional headers to appear more legitimate
+    extraHTTPHeaders: {
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+    },
+
     // Video recording
     video: {
       mode: "retain-on-failure",
@@ -56,11 +77,14 @@ export default defineConfig({
       snapshots: true,
     },
 
-    // Navigation timeout (reduced for local)
-    navigationTimeout: 15000,
+    // Navigation timeout (increased for Cloudflare challenges)
+    navigationTimeout: 30000,
 
-    // Action timeout (reduced for local)
-    actionTimeout: 5000,
+    // Action timeout (increased for Cloudflare challenges)
+    actionTimeout: 10000,
+
+    // Ignore HTTPS errors (useful for UAT environments)
+    ignoreHTTPSErrors: true,
   },
 
   // Test projects - Chrome Only

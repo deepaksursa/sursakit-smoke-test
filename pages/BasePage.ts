@@ -98,4 +98,104 @@ export class BasePage {
   async waitForNavigation(): Promise<void> {
     await this.page.waitForLoadState("networkidle");
   }
+
+  /**
+   * Check if Cloudflare challenge is present on the page
+   */
+  async isCloudflareChallenge(): Promise<boolean> {
+    try {
+      // Check for Cloudflare challenge indicators
+      const cloudflareIndicators = [
+        'text="Checking your browser before accessing"',
+        'text="Just a moment"',
+        'text="Please wait"',
+        '[id*="cf-"]',
+        '[class*="cf-"]',
+        'iframe[src*="challenges.cloudflare.com"]',
+        'iframe[src*="cloudflare"]',
+        'text="DDoS protection by Cloudflare"',
+        'text="Ray ID"',
+      ];
+
+      for (const selector of cloudflareIndicators) {
+        const element = this.page.locator(selector).first();
+        if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
+          return true;
+        }
+      }
+
+      // Check page title
+      const title = await this.page.title();
+      if (
+        title.toLowerCase().includes("just a moment") ||
+        title.toLowerCase().includes("checking your browser")
+      ) {
+        return true;
+      }
+
+      // Check URL
+      const url = this.page.url();
+      if (url.includes("challenges.cloudflare.com")) {
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Wait for Cloudflare challenge to complete
+   * This will wait for the challenge to be solved (either automatically or manually)
+   */
+  async waitForCloudflareChallenge(maxWaitTime: number = 30000): Promise<boolean> {
+    console.log("🛡️ Checking for Cloudflare challenge...");
+
+    const isChallenge = await this.isCloudflareChallenge();
+    if (!isChallenge) {
+      console.log("✅ No Cloudflare challenge detected");
+      return true;
+    }
+
+    console.log("⏳ Cloudflare challenge detected, waiting for completion...");
+    console.log("💡 If challenge requires manual interaction, please complete it in the browser");
+
+    const startTime = Date.now();
+    const checkInterval = 1000; // Check every second
+
+    while (Date.now() - startTime < maxWaitTime) {
+      // Check if challenge is still present
+      const stillChallenging = await this.isCloudflareChallenge();
+
+      if (!stillChallenging) {
+        console.log("✅ Cloudflare challenge completed!");
+        // Wait a bit more for page to fully load
+        await this.page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+        return true;
+      }
+
+      // Wait before next check
+      await this.page.waitForTimeout(checkInterval);
+    }
+
+    console.log("⚠️ Cloudflare challenge timeout - challenge may still be active");
+    return false;
+  }
+
+  /**
+   * Navigate with Cloudflare challenge handling
+   */
+  async navigateWithCloudflareHandling(url: string): Promise<void> {
+    await this.page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+
+    // Wait for Cloudflare challenge if present
+    await this.waitForCloudflareChallenge();
+
+    // Wait for page to be fully loaded
+    await this.page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+  }
 }
