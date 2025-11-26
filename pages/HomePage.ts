@@ -13,7 +13,6 @@ export class HomePage extends BasePage {
     'a:has-text("Sign In")',
   ];
 
-  //Organization Selectors
 
   private orgNameInputSelectors = [
     'form input:near(:text("Organization Name"))',
@@ -26,7 +25,7 @@ export class HomePage extends BasePage {
 
   private createButtonSelectors = ['button[type="submit"]:has-text("Create")'];
 
-  //Workspace Selectors
+  
 
   private createWorkspaceButtonSelectors = [
     'button:has-text("Create empty workspace")',
@@ -40,6 +39,13 @@ export class HomePage extends BasePage {
   }
 
   async navigateToHome(): Promise<void> {
+    await this.navigate("/");
+  }
+
+  /**
+   * Navigate to home with Cloudflare handling (use only if needed)
+   */
+  async navigateToHomeWithCloudflare(): Promise<void> {
     await this.navigateWithCloudflareHandling("/");
   }
 
@@ -51,7 +57,6 @@ export class HomePage extends BasePage {
   async clickSignIn(): Promise<void> {
     const signInButton = await this.getSignInButton();
     await signInButton.click();
-    console.log("✅ Clicked Sign In button");
     await this.page.waitForTimeout(2000);
   }
 
@@ -64,7 +69,7 @@ export class HomePage extends BasePage {
     const url = this.getCurrentUrl();
     return (
       url.endsWith("/") ||
-      url.includes("localhost:5173") ||
+      url.includes("uat.sursakit.com/") ||
       (!this.isUrlContaining("auth") && !this.isUrlContaining("login"))
     );
   }
@@ -73,14 +78,12 @@ export class HomePage extends BasePage {
     return await this.page.locator("nav a, header a").allTextContents();
   }
 
-  // Organization Creation
 
   async clickCreateOrgBtn() {
     const createOrgBtn = this.page.getByRole("menuitem", {
       name: "Create new organization",
     });
     await createOrgBtn.click();
-    console.log("Create organization button clicked");
   }
 
   async isCreateOrgModalVisible() {
@@ -91,7 +94,6 @@ export class HomePage extends BasePage {
   async fillOrgName(orgName: string): Promise<void> {
     const input = await this.findElement(this.orgNameInputSelectors);
     await input.fill(orgName);
-    console.log(`Organization name entered: ${orgName}`);
   }
 
   async clickCreate(): Promise<void> {
@@ -147,7 +149,6 @@ export class HomePage extends BasePage {
   async clickCreateWorkspace() {
     const button = await this.findElement(this.createWorkspaceButtonSelectors);
     await button.click();
-    console.log("Clicked create workspace");
   }
 
   async isCreateWorkSpaceModalVisible() {
@@ -158,7 +159,6 @@ export class HomePage extends BasePage {
   async fillWorkSpaceName(workspaceName: string) {
     const input = await this.findElement(this.createWorkspaceInputSelectors);
     await input.fill(workspaceName);
-    console.log(`Workspace name entered: ${workspaceName}`);
   }
 
   async createNewWorkspace(workspaceName: string) {
@@ -168,6 +168,5 @@ export class HomePage extends BasePage {
     await this.clickCreate();
     //check if user navigates inside the workspace to confirm workspace creation
     await expect(this.page).toHaveURL(/\/s\/[a-z0-9]+$/);
-    console.log("Workspace created");
   }
 }

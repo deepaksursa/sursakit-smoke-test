@@ -1,18 +1,8 @@
 import { Page, Locator } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
-/**
- * Login Page Object - Handles all login-related interactions
- *
- * Encapsulates:
- * - Login form interactions
- * - Element location with fallback selectors
- * - Login validation
- * - Error handling
- */
 
 export class LoginPage extends BasePage {
-  // Selector arrays for flexible element location
   private emailSelectors = [
     'input[type="email"]',
     'input[name="email"]',
@@ -43,7 +33,6 @@ export class LoginPage extends BasePage {
   ];
 
   private errorSelectors = [
-    // Class-based selectors
     '[class*="error"]',
     '[class*="invalid"]',
     '[class*="warning"]',
@@ -53,7 +42,6 @@ export class LoginPage extends BasePage {
     '[role="alert"]',
     '[data-testid*="error"]',
     
-    // Text-based selectors (more comprehensive)
     'text="Invalid email or password"',
     'text="Invalid"',
     'text="Error"',
@@ -63,7 +51,6 @@ export class LoginPage extends BasePage {
     'text="unavailable"',
     'text="service"',
     
-    // Partial text matches
     ':has-text("Invalid")',
     ':has-text("Error")',
     ':has-text("Wrong")',
@@ -72,7 +59,6 @@ export class LoginPage extends BasePage {
     ':has-text("password")',
     ':has-text("email")',
     
-    // Common notification selectors
     '.notification',
     '.toast',
     '.message',
@@ -135,7 +121,6 @@ export class LoginPage extends BasePage {
   async fillEmail(email: string): Promise<void> {
     const emailInput = await this.getEmailInput();
     await emailInput.fill(email);
-    console.log(`✅ Email entered: ${email}`);
   }
 
   /**
@@ -144,7 +129,6 @@ export class LoginPage extends BasePage {
   async fillPassword(password: string): Promise<void> {
     const passwordInput = await this.getPasswordInput();
     await passwordInput.fill(password);
-    console.log("✅ Password entered");
   }
 
   /**
@@ -153,7 +137,6 @@ export class LoginPage extends BasePage {
   async clickSubmit(): Promise<void> {
     const submitButton = await this.getSubmitButton();
     await submitButton.click();
-    console.log("✅ Submit button clicked");
   }
 
   /**
@@ -187,7 +170,6 @@ export class LoginPage extends BasePage {
    * Submit login form
    */
   private async submitLoginForm(): Promise<void> {
-    console.log("🚀 Submitting login form...");
     await this.clickSubmit();
   }
 
@@ -208,25 +190,20 @@ export class LoginPage extends BasePage {
   async getErrorMessages(): Promise<string[]> {
     const errors: string[] = [];
 
-    console.log("🔍 Searching for error messages...");
-
     for (const selector of this.errorSelectors) {
       try {
         const errorElement = this.page.locator(selector);
         if (await errorElement.isVisible({ timeout: 2000 }).catch(() => false)) {
           const errorText = await errorElement.textContent();
           if (errorText && errorText.trim()) {
-            console.log(`❌ Found error with selector "${selector}": "${errorText.trim()}"`);
             errors.push(errorText.trim());
           }
         }
-      } catch (error) {
+      } catch {
         // Continue checking other selectors
-        console.log(`⚠️ Error checking selector "${selector}": ${error}`);
       }
     }
 
-    // Additional check: scan entire page for common error phrases
     const pageContent = await this.page.textContent('body').catch(() => '');
     const errorPhrases = [
       'Invalid email or password',
@@ -241,18 +218,13 @@ export class LoginPage extends BasePage {
 
     for (const phrase of errorPhrases) {
       if (pageContent.toLowerCase().includes(phrase.toLowerCase())) {
-        console.log(`❌ Found error phrase in page content: "${phrase}"`);
         if (!errors.some(e => e.toLowerCase().includes(phrase.toLowerCase()))) {
           errors.push(phrase);
         }
       }
     }
 
-    if (errors.length === 0) {
-      console.log("ℹ️ No error messages found on page");
-    }
-
-    return [...new Set(errors)]; // Remove duplicates
+    return [...new Set(errors)];
   }
 
   /**
@@ -262,15 +234,11 @@ export class LoginPage extends BasePage {
   async verifyLoginSuccess(): Promise<boolean> {
     await this.waitForLoginResponse();
     
-    const currentUrl = this.getCurrentUrl();
-    console.log(`🔍 Current URL after login: ${currentUrl}`);
-    
     if (this.isOnLoginPage()) {
       await this.handleLoginFailure();
       return false;
     }
 
-    console.log("✅ Login successful - redirected away from login page");
     return true;
   }
 
@@ -284,10 +252,9 @@ export class LoginPage extends BasePage {
         this.page.waitForLoadState("domcontentloaded", { timeout: 5000 })
       ]);
     } catch {
-      console.log("⚠️ Navigation timeout, proceeding with verification...");
+      // Continue with verification even if navigation times out
     }
 
-    // Buffer time for any final redirects
     await this.page.waitForTimeout(1000);
   }
 
@@ -295,15 +262,10 @@ export class LoginPage extends BasePage {
    * Handle login failure with comprehensive error reporting
    */
   private async handleLoginFailure(): Promise<void> {
-    console.log("❌ Still on login page - login failed");
-    
     await this.takeScreenshot("login-verification-failed");
     
     const errors = await this.getErrorMessages();
-    if (errors.length > 0) {
-      console.log("❌ Login errors found:", errors);
-    } else {
-      console.log("❌ No specific error messages found, but still on login page");
+    if (errors.length === 0) {
       await this.debugPageContent();
     }
   }
@@ -312,21 +274,9 @@ export class LoginPage extends BasePage {
    * Debug page content when no obvious errors are found
    */
   private async debugPageContent(): Promise<void> {
-    console.log("🔍 Dumping page content for analysis...");
+    await this.page.textContent('body').catch(() => '');
     
-    const pageText = await this.page.textContent('body').catch(() => 'Could not get page content');
-    console.log("📄 Page content preview:", pageText?.substring(0, 500) + "...");
-    
-    // Look for potential error elements
-    const errorElements = await this.page.locator('*:has-text("invalid"), *:has-text("error"), *:has-text("wrong"), *:has-text("failed")').all();
-    console.log(`🔍 Found ${errorElements.length} elements with potential error text`);
-    
-    for (let i = 0; i < Math.min(errorElements.length, 5); i++) {
-      const text = await errorElements[i].textContent().catch(() => '');
-      if (text?.trim()) {
-        console.log(`🔍 Element ${i + 1}: "${text.trim()}"`);
-      }
-    }
+    await this.page.locator('*:has-text("invalid"), *:has-text("error"), *:has-text("wrong"), *:has-text("failed")').all().catch(() => []);
   }
 
   /**

@@ -3,19 +3,9 @@ import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { TestCredentials } from "../utils/test-data";
 
-/**
- * Login Test Suite - Page Object Model Pattern
- *
- * This test demonstrates:
- * - Page Object Model usage (HomePage, LoginPage)
- * - Test step organization
- * - Proper assertions
- * - Cloudflare challenge handling
- */
 
 test.describe("Login Functionality", () => {
   test("TC_001: Valid Login", async ({ page }) => {
-    // Initialize page objects
     const homePage = new HomePage(page);
     const loginPage = new LoginPage(page);
     const credentials = TestCredentials.validUser;
@@ -38,7 +28,6 @@ test.describe("Login Functionality", () => {
         credentials.password
       );
 
-      // Assert login was successful (performLogin already verifies internally)
       expect(loginSuccess).toBe(true);
       await loginPage.takeScreenshot("03-login-success");
     });

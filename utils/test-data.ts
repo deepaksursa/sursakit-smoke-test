@@ -1,16 +1,4 @@
-/**
- * Test Data Configuration
- *
- * Why TypeScript format?
- * ✅ Environment variable integration (process.env)
- * ✅ Type safety and IntelliSense
- * ✅ Fallback values for safety
- * ✅ Complex data structures
- * ✅ Comments and documentation
- * ✅ Multiple test scenarios
- */
 
-// Type definitions for better structure
 interface UserCredentials {
   username: string;
   password: string;
@@ -19,7 +7,6 @@ interface UserCredentials {
 interface TestUsers {
   validUser: UserCredentials;
   invalidUser: UserCredentials;
-  // Future: adminUser, guestUser, etc.
 }
 
 interface TestData {
@@ -29,7 +16,6 @@ interface TestData {
   fileName: string;
 }
 
-// Test Credentials - Uses environment variables with fallbacks
 export const TestCredentials: TestUsers = {
   validUser: {
     username: process.env.TEST_USERNAME || "test@example.com",
@@ -40,9 +26,6 @@ export const TestCredentials: TestUsers = {
     username: "invalid@example.com",
     password: "wrongpassword",
   },
-  // Future test users can be added here:
-  // adminUser: { ... },
-  // guestUser: { ... },
 };
 
 export const testData: TestData = {
@@ -52,7 +35,6 @@ export const testData: TestData = {
   fileName: "File.ts",
 };
 
-// Test Configuration
 export const TestConfig = {
   timeouts: {
     default: 30000,
@@ -61,15 +43,13 @@ export const TestConfig = {
   },
 
   urls: {
-    base: process.env.BASE_URL || "http://localhost:5173",
+    base: process.env.BASE_URL || "https://uat.sursakit.com",
     login: "/auth/sign-in",
     dashboard: "/dashboard",
   },
 
-  // Future: API endpoints, test data sets, etc.
 };
 
-// Helper functions (only possible in .ts)
 export const getTestUser = (
   type: "valid" | "invalid" = "valid"
 ): UserCredentials => {
@@ -78,7 +58,6 @@ export const getTestUser = (
     : TestCredentials.invalidUser;
 };
 
-// Validation helper
 export const validateCredentials = (): boolean => {
   const { username, password } = TestCredentials.validUser;
   return username !== "test@example.com" && password !== "password123";

@@ -21,10 +21,10 @@ export default defineConfig({
   },
 
   // Retry configuration for flaky tests
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
 
-  // Parallel execution workers
-  workers: process.env.CI ? 2 : undefined,
+  // Parallel execution workers (currently only 1 active test, so no benefit)
+  workers: 1,
 
   // Simple HTML reporter only
   reporter: [["html", { outputFolder: "reports", open: "never" }], ["list"]],
@@ -32,7 +32,7 @@ export default defineConfig({
   // Global test configuration
   use: {
     // Base URL for navigation
-    baseURL: process.env.BASE_URL || "http://localhost:5173",
+    baseURL: process.env.BASE_URL || "https://uat.sursakit.com",
 
     // Browser configuration
     headless: process.env.HEADLESS === "true",
