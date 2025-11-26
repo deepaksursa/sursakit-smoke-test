@@ -58,11 +58,11 @@ export default defineConfig({
       "Upgrade-Insecure-Requests": "1",
     },
 
-    // Video recording
-    video: {
+    // Video recording (only for CI failures)
+    video: process.env.CI ? {
       mode: "retain-on-failure",
       size: { width: 1280, height: 720 },
-    },
+    } : "off",
 
     // Screenshot on failure
     screenshot: {

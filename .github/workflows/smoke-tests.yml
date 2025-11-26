@@ -1,0 +1,66 @@
+name: Smoke Tests
+
+on:
+  # Manual trigger (primary method during development)
+  workflow_dispatch:
+  
+  # Scheduled execution (disabled during development phase)
+  # schedule:
+  #   - cron: '0 2 * * *'
+  
+  # Trigger from other repos (for future integration)
+  repository_dispatch:
+    types: [run-smoke-tests]
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run tests
+        run: npm run test:headless
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-artifacts-${{ github.run_number }}
+          path: |
+            test-results/**/*.png
+            test-results/**/*.webm
+            test-results/**/trace.zip
+            test-results/**/error-context.md
+          retention-days: 14
+          if-no-files-found: ignore
+      
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-${{ github.run_number }}
+          path: reports/index.html
+          retention-days: 7
+          if-no-files-found: ignore
+      
+      - name: Notify on failure
+        if: failure()
+        run: echo "🚨 Smoke tests failed! Check the artifacts for details."
