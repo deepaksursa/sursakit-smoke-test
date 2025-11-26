@@ -9,29 +9,33 @@
 
 ## 📋 Test Cases Summary
 
-| ID | Test Case | Priority | Status | Automated |
-|----|-----------|----------|---------|-----------|
-| TC_001 | Valid login (local) | High | ✅ | ✅ |
+| ID     | Test Case           | Priority | Status | Automated |
+| ------ | ------------------- | -------- | ------ | --------- |
+| TC_001 | Valid login (local) | High     | ✅     | ✅        |
 
 ---
 
 ## 🧪 Test Cases
 
 ### **TC_001: Valid Login (Local Environment)**
+
 **Objective:** User logs in successfully with valid credentials on localhost
 
 **Preconditions:**
+
 - Local app running on http://localhost:5173
 - Cloudflare Turnstile disabled
 - Valid test credentials in .env file
 
 **Steps:**
+
 1. Go to http://localhost:5173
-2. Click on Sign In button 
+2. Click on Sign In button
 3. Enter valid email & password from .env
 4. Click Login
 
-**Expected:** 
+**Expected:**
+
 - Redirects away from login page
 - No error messages
 - Access to logged-in areas
@@ -43,6 +47,7 @@
 ## 🔧 Setup
 
 **Environment:**
+
 ```bash
 BASE_URL=http://localhost:5173
 TEST_USERNAME=your_email@example.com
@@ -51,6 +56,7 @@ HEADLESS=false
 ```
 
 **Run Tests:**
+
 ```bash
 npm run test               # Run test (with browser visible)
 npm run test:headless     # Run test (background)
@@ -69,9 +75,9 @@ npm run test:debug        # Debug mode
 
 ## 📊 Execution Log
 
-| Date | Tests Run | Pass | Fail | Notes |
-|------|-----------|------|------|-------|
-| 2024-07-07 | TC_001 | - | - | Configured for local testing |
+| Date       | Tests Run | Pass | Fail | Notes                        |
+| ---------- | --------- | ---- | ---- | ---------------------------- |
+| 2024-07-07 | TC_001    | -    | -    | Configured for local testing |
 
 ## 🎯 Next Steps
 
@@ -79,5 +85,3 @@ npm run test:debug        # Debug mode
 2. **Run first test** - `npm run test`
 3. **Check screenshots** - Review test-results/ for any issues
 4. **Adjust selectors** - If elements not found, check screenshots and update selectors
-
- 

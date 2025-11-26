@@ -45,7 +45,7 @@ export class BasePage {
     for (const selector of selectors) {
       const element = this.page.locator(selector).first();
       try {
-        await element.waitFor({ state: "visible", timeout: 2000 });
+        await element.waitFor({ state: "visible", timeout: timeout });
         return element;
       } catch {
         continue;
@@ -149,7 +149,9 @@ export class BasePage {
    * Wait for Cloudflare challenge to complete
    * This will wait for the challenge to be solved (either automatically or manually)
    */
-  async waitForCloudflareChallenge(maxWaitTime: number = 30000): Promise<boolean> {
+  async waitForCloudflareChallenge(
+    maxWaitTime: number = 30000
+  ): Promise<boolean> {
     console.log("🛡️ Checking for Cloudflare challenge...");
 
     const isChallenge = await this.isCloudflareChallenge();
@@ -159,7 +161,9 @@ export class BasePage {
     }
 
     console.log("⏳ Cloudflare challenge detected, waiting for completion...");
-    console.log("💡 If challenge requires manual interaction, please complete it in the browser");
+    console.log(
+      "💡 If challenge requires manual interaction, please complete it in the browser"
+    );
 
     const startTime = Date.now();
     const checkInterval = 1000; // Check every second
@@ -171,7 +175,9 @@ export class BasePage {
       if (!stillChallenging) {
         console.log("✅ Cloudflare challenge completed!");
         // Wait a bit more for page to fully load
-        await this.page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+        await this.page
+          .waitForLoadState("networkidle", { timeout: 5000 })
+          .catch(() => {});
         return true;
       }
 
@@ -179,7 +185,9 @@ export class BasePage {
       await this.page.waitForTimeout(checkInterval);
     }
 
-    console.log("⚠️ Cloudflare challenge timeout - challenge may still be active");
+    console.log(
+      "⚠️ Cloudflare challenge timeout - challenge may still be active"
+    );
     return false;
   }
 
@@ -196,6 +204,8 @@ export class BasePage {
     await this.waitForCloudflareChallenge();
 
     // Wait for page to be fully loaded
-    await this.page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+    await this.page
+      .waitForLoadState("networkidle", { timeout: 10000 })
+      .catch(() => {});
   }
 }

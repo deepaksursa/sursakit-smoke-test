@@ -1,9 +1,9 @@
 import { test } from "../fixtures/fixtures";
-import { TestData } from "../utils/test-data";
+import { testData } from "../utils/test-data";
 
 test.skip("TC_002: Create service, upload project, and run", async ({
   workspacePage,
 }) => {
-  await workspacePage.createEmptyService(TestData.serviceName);
-  await workspacePage.uploadFile(TestData.serviceName);
+  await workspacePage.createEmptyService(testData.serviceName);
+  await workspacePage.uploadFile(testData.serviceName);
 });

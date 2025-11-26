@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { Page, Locator } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 /**
@@ -104,7 +104,7 @@ export class LoginPage extends BasePage {
   /**
    * Fill email field
    */
-  
+
   async fillEmail(email: string): Promise<void> {
     const emailInput = await this.getEmailInput();
     await emailInput.fill(email);

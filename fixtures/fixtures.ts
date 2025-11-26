@@ -2,7 +2,7 @@ import { test as base } from "@playwright/test";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
-import { TestCredentials, TestData } from "../utils/test-data";
+import { TestCredentials, testData } from "../utils/test-data";
 
 type TestFixtures = {
   workspacePage: WorkspacePage;
@@ -19,8 +19,8 @@ export const test = base.extend<TestFixtures>({
     await homePage.goToLogin();
     await loginPage.performLogin(username, password);
 
-    await homePage.createNewOrganization(TestData.organizationName);
-    await homePage.createNewWorkspace(TestData.workspaceName);
+    await homePage.createNewOrganization(testData.organizationName);
+    await homePage.createNewWorkspace(testData.workspaceName);
     await workspacePage.isOnWorkspacePage();
 
     // now the page is on workspace with user logged in

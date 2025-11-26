@@ -1,11 +1,11 @@
 /**
  * 🔧 Test Helper Utilities
- * 
+ *
  * Common functions that junior developers can use across tests
  * These helpers simplify repetitive tasks and ensure consistency
  */
 
-import { Page, expect } from '@playwright/test';
+import { Page, expect } from "@playwright/test";
 
 /**
  * 📧 Email Helpers
@@ -14,7 +14,7 @@ export class EmailHelpers {
   /**
    * Generate unique test email
    */
-  static generateTestEmail(prefix: string = 'test'): string {
+  static generateTestEmail(prefix: string = "test"): string {
     const timestamp = Date.now();
     return `${prefix}+${timestamp}@example.com`;
   }
@@ -35,26 +35,37 @@ export class WaitHelpers {
   /**
    * Wait for specific time with logging
    */
-  static async waitWithLog(milliseconds: number, reason: string): Promise<void> {
+  static async waitWithLog(
+    milliseconds: number,
+    reason: string
+  ): Promise<void> {
     console.log(`⏳ Waiting ${milliseconds}ms: ${reason}`);
-    await new Promise(resolve => setTimeout(resolve, milliseconds));
+    await new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
   /**
    * Wait for element to disappear
    */
-  static async waitForElementToDisappear(page: Page, selector: string, timeout: number = 10000): Promise<void> {
+  static async waitForElementToDisappear(
+    page: Page,
+    selector: string,
+    timeout: number = 10000
+  ): Promise<void> {
     console.log(`⏳ Waiting for element to disappear: ${selector}`);
-    await page.locator(selector).waitFor({ state: 'hidden', timeout });
+    await page.locator(selector).waitFor({ state: "hidden", timeout });
     console.log(`✅ Element disappeared: ${selector}`);
   }
 
   /**
    * Wait for URL to contain text
    */
-  static async waitForUrl(page: Page, urlText: string, timeout: number = 10000): Promise<void> {
+  static async waitForUrl(
+    page: Page,
+    urlText: string,
+    timeout: number = 10000
+  ): Promise<void> {
     console.log(`⏳ Waiting for URL to contain: ${urlText}`);
-    
+
     const startTime = Date.now();
     while (Date.now() - startTime < timeout) {
       if (page.url().includes(urlText)) {
@@ -63,7 +74,7 @@ export class WaitHelpers {
       }
       await page.waitForTimeout(500);
     }
-    
+
     throw new Error(`Timeout waiting for URL to contain: ${urlText}`);
   }
 }
@@ -75,18 +86,21 @@ export class FormHelpers {
   /**
    * Fill form fields from object
    */
-  static async fillFormFields(page: Page, fields: Record<string, string>): Promise<void> {
-    console.log('📝 Filling form fields...');
-    
+  static async fillFormFields(
+    page: Page,
+    fields: Record<string, string>
+  ): Promise<void> {
+    console.log("📝 Filling form fields...");
+
     for (const [fieldName, value] of Object.entries(fields)) {
       const selectors = [
         `input[name="${fieldName}"]`,
         `input[id="${fieldName}"]`,
         `input[data-testid="${fieldName}"]`,
         `textarea[name="${fieldName}"]`,
-        `select[name="${fieldName}"]`
+        `select[name="${fieldName}"]`,
       ];
-      
+
       let filled = false;
       for (const selector of selectors) {
         const element = page.locator(selector);
@@ -97,7 +111,7 @@ export class FormHelpers {
           break;
         }
       }
-      
+
       if (!filled) {
         console.log(`⚠️ Could not find field: ${fieldName}`);
       }
@@ -107,7 +121,11 @@ export class FormHelpers {
   /**
    * Select dropdown option
    */
-  static async selectDropdownOption(page: Page, dropdownSelector: string, optionText: string): Promise<void> {
+  static async selectDropdownOption(
+    page: Page,
+    dropdownSelector: string,
+    optionText: string
+  ): Promise<void> {
     console.log(`📝 Selecting dropdown option: ${optionText}`);
     await page.locator(dropdownSelector).selectOption({ label: optionText });
     console.log(`✅ Selected: ${optionText}`);
@@ -121,7 +139,11 @@ export class AssertionHelpers {
   /**
    * Verify element is visible with custom message
    */
-  static async assertElementVisible(page: Page, selector: string, elementName: string): Promise<void> {
+  static async assertElementVisible(
+    page: Page,
+    selector: string,
+    elementName: string
+  ): Promise<void> {
     console.log(`✅ Verifying ${elementName} is visible`);
     const element = page.locator(selector);
     await expect(element).toBeVisible();
@@ -131,7 +153,12 @@ export class AssertionHelpers {
   /**
    * Verify text content
    */
-  static async assertTextContent(page: Page, selector: string, expectedText: string, elementName: string): Promise<void> {
+  static async assertTextContent(
+    page: Page,
+    selector: string,
+    expectedText: string,
+    elementName: string
+  ): Promise<void> {
     console.log(`✅ Verifying ${elementName} contains: ${expectedText}`);
     const element = page.locator(selector);
     await expect(element).toContainText(expectedText);
@@ -150,7 +177,10 @@ export class AssertionHelpers {
   /**
    * Verify page title
    */
-  static async assertPageTitle(page: Page, expectedTitle: string): Promise<void> {
+  static async assertPageTitle(
+    page: Page,
+    expectedTitle: string
+  ): Promise<void> {
     console.log(`✅ Verifying page title: ${expectedTitle}`);
     await expect(page).toHaveTitle(expectedTitle);
     console.log(`✅ Confirmed page title: ${expectedTitle}`);
@@ -165,8 +195,9 @@ export class DataHelpers {
    * Generate random string
    */
   static generateRandomString(length: number = 8): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
     for (let i = 0; i < length; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -189,7 +220,7 @@ export class DataHelpers {
       lastName: `TestLast${id}`,
       email: EmailHelpers.generateTestEmail(`user${id}`),
       username: `testuser${id}`,
-      password: `Password123!${id}`
+      password: `Password123!${id}`,
     };
   }
 
@@ -197,7 +228,7 @@ export class DataHelpers {
    * Format date for inputs
    */
   static formatDateForInput(date: Date): string {
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD
+    return date.toISOString().split("T")[0]; // YYYY-MM-DD
   }
 }
 
@@ -208,7 +239,10 @@ export class DebugHelpers {
   /**
    * Log page elements for debugging
    */
-  static async logPageElements(page: Page, elementType: string = 'button'): Promise<void> {
+  static async logPageElements(
+    page: Page,
+    elementType: string = "button"
+  ): Promise<void> {
     console.log(`🔍 Available ${elementType}s on page:`);
     const elements = await page.locator(elementType).allTextContents();
     elements.forEach((text, index) => {
@@ -222,7 +256,7 @@ export class DebugHelpers {
   static async logPageInfo(page: Page): Promise<void> {
     const url = page.url();
     const title = await page.title();
-    console.log('📊 Page Info:');
+    console.log("📊 Page Info:");
     console.log(`   URL: ${url}`);
     console.log(`   Title: ${title}`);
   }
@@ -230,13 +264,16 @@ export class DebugHelpers {
   /**
    * Take debug screenshot with timestamp
    */
-  static async takeDebugScreenshot(page: Page, description: string): Promise<void> {
+  static async takeDebugScreenshot(
+    page: Page,
+    description: string
+  ): Promise<void> {
     const timestamp = Date.now();
     const filename = `debug-${description}-${timestamp}.png`;
-    await page.screenshot({ 
-      path: `test-results/${filename}`, 
-      fullPage: true 
+    await page.screenshot({
+      path: `test-results/${filename}`,
+      fullPage: true,
     });
     console.log(`📸 Debug screenshot: ${filename}`);
   }
-} 
+}

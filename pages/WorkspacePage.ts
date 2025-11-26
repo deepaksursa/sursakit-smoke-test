@@ -141,7 +141,9 @@ export class WorkspacePage extends BasePage {
   async writeOnEditor(fileName: string) {
     const editor = this.page.locator(".view-lines");
     await editor.click();
-    await this.page.keyboard.type("console.log('Hello World')");
+    await this.page.keyboard.type(
+      `console.log("${fileName ? fileName : "Hello World"}")`
+    );
   }
 
   async closeFileAndSave(fileName: string) {

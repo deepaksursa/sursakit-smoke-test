@@ -45,7 +45,7 @@ export const TestCredentials: TestUsers = {
   // guestUser: { ... },
 };
 
-export const TestData: TestData = {
+export const testData: TestData = {
   organizationName: "Test Organization",
   workspaceName: "Test Worksapce",
   serviceName: "Test Service",

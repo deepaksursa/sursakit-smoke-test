@@ -5,7 +5,7 @@ import { TestCredentials } from "../utils/test-data";
 
 /**
  * Login Test Suite - Page Object Model Pattern
- * 
+ *
  * This test demonstrates:
  * - Page Object Model usage (HomePage, LoginPage)
  * - Test step organization
@@ -37,7 +37,7 @@ test.describe("Login Functionality", () => {
         credentials.username,
         credentials.password
       );
-      
+
       // Assert login was successful (performLogin already verifies internally)
       expect(loginSuccess).toBe(true);
       await loginPage.takeScreenshot("03-login-success");
