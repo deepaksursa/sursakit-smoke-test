@@ -35,7 +35,7 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || "https://uat.sursakit.com",
 
     // Browser configuration
-    headless: process.env.HEADLESS === "true",
+    headless: process.env.HEADLESS !== "false",
 
     // Enhanced browser fingerprinting to bypass Cloudflare
     // These settings make the browser look more like a real user
