@@ -12,14 +12,11 @@ test.describe("Login Functionality", () => {
 
     await test.step("Navigate to Homepage", async () => {
       await homePage.navigateToHome();
-      await homePage.waitForCloudflareChallenge();
-      await homePage.takeScreenshot("01-homepage");
     });
 
     await test.step("Navigate to Login Page", async () => {
       await homePage.goToLogin();
       await loginPage.waitForCloudflareChallenge();
-      await loginPage.takeScreenshot("02-login-page");
     });
 
     await test.step("Perform Login and Verify", async () => {
