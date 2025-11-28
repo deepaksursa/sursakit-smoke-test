@@ -1,4 +1,3 @@
-
 interface UserCredentials {
   username: string;
   password: string;
@@ -47,7 +46,6 @@ export const TestConfig = {
     login: "/auth/sign-in",
     dashboard: "/dashboard",
   },
-
 };
 
 export const getTestUser = (

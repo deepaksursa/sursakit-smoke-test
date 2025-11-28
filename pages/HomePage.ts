@@ -13,7 +13,6 @@ export class HomePage extends BasePage {
     'a:has-text("Sign In")',
   ];
 
-
   private orgNameInputSelectors = [
     'form input:near(:text("Organization Name"))',
     'form input[name="name"]',
@@ -24,8 +23,6 @@ export class HomePage extends BasePage {
   ];
 
   private createButtonSelectors = ['button[type="submit"]:has-text("Create")'];
-
-  
 
   private createWorkspaceButtonSelectors = [
     'button:has-text("Create empty workspace")',
@@ -77,7 +74,6 @@ export class HomePage extends BasePage {
   async getNavigationLinks(): Promise<string[]> {
     return await this.page.locator("nav a, header a").allTextContents();
   }
-
 
   async clickCreateOrgBtn() {
     const createOrgBtn = this.page.getByRole("menuitem", {

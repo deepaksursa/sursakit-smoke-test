@@ -4,6 +4,7 @@
 
 ## 📋 Test Cases
 
-| ID     | Scenario      | Expected Result |
-| ------ | ------------- | --------------- |
-| TC_001 | Valid Login   | → Dashboard     |
+| ID     | Scenario      | Expected Result    |
+| ------ | ------------- | ------------------ |
+| TC_001 | Valid Login   | → Dashboard        |
+| TC_002 | Invalid Login | → Error/login page |

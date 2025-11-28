@@ -1,7 +1,6 @@
 import { Page, Locator } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
-
 export class LoginPage extends BasePage {
   private emailSelectors = [
     'input[type="email"]',
@@ -41,7 +40,7 @@ export class LoginPage extends BasePage {
     '[class*="fail"]',
     '[role="alert"]',
     '[data-testid*="error"]',
-    
+
     'text="Invalid email or password"',
     'text="Invalid"',
     'text="Error"',
@@ -50,7 +49,7 @@ export class LoginPage extends BasePage {
     'text="Failed"',
     'text="unavailable"',
     'text="service"',
-    
+
     ':has-text("Invalid")',
     ':has-text("Error")',
     ':has-text("Wrong")',
@@ -58,13 +57,13 @@ export class LoginPage extends BasePage {
     ':has-text("Failed")',
     ':has-text("password")',
     ':has-text("email")',
-    
-    '.notification',
-    '.toast',
-    '.message',
-    '.feedback',
-    '#error',
-    '#message',
+
+    ".notification",
+    ".toast",
+    ".message",
+    ".feedback",
+    "#error",
+    "#message",
   ];
 
   constructor(page: Page) {
@@ -143,7 +142,6 @@ export class LoginPage extends BasePage {
    * Main login action - combines all steps
    */
   async login(email: string, password: string): Promise<void> {
-
     await this.prepareLoginForm();
     await this.fillLoginForm(email, password);
     await this.submitLoginForm();
@@ -193,7 +191,9 @@ export class LoginPage extends BasePage {
     for (const selector of this.errorSelectors) {
       try {
         const errorElement = this.page.locator(selector);
-        if (await errorElement.isVisible({ timeout: 2000 }).catch(() => false)) {
+        if (
+          await errorElement.isVisible({ timeout: 2000 }).catch(() => false)
+        ) {
           const errorText = await errorElement.textContent();
           if (errorText && errorText.trim()) {
             errors.push(errorText.trim());
@@ -204,21 +204,23 @@ export class LoginPage extends BasePage {
       }
     }
 
-    const pageContent = await this.page.textContent('body').catch(() => '');
+    const pageContent = await this.page.textContent("body").catch(() => "");
     const errorPhrases = [
-      'Invalid email or password',
-      'Invalid credentials',
-      'Login failed',
-      'Authentication failed',
-      'Wrong password',
-      'User not found',
-      'Account locked',
-      'Too many attempts'
+      "Invalid email or password",
+      "Invalid credentials",
+      "Login failed",
+      "Authentication failed",
+      "Wrong password",
+      "User not found",
+      "Account locked",
+      "Too many attempts",
     ];
 
     for (const phrase of errorPhrases) {
       if (pageContent.toLowerCase().includes(phrase.toLowerCase())) {
-        if (!errors.some(e => e.toLowerCase().includes(phrase.toLowerCase()))) {
+        if (
+          !errors.some((e) => e.toLowerCase().includes(phrase.toLowerCase()))
+        ) {
           errors.push(phrase);
         }
       }
@@ -233,7 +235,7 @@ export class LoginPage extends BasePage {
 
   async verifyLoginSuccess(): Promise<boolean> {
     await this.waitForLoginResponse();
-    
+
     if (this.isOnLoginPage()) {
       await this.handleLoginFailure();
       return false;
@@ -249,7 +251,7 @@ export class LoginPage extends BasePage {
     try {
       await Promise.race([
         this.page.waitForLoadState("networkidle", { timeout: 10000 }),
-        this.page.waitForLoadState("domcontentloaded", { timeout: 5000 })
+        this.page.waitForLoadState("domcontentloaded", { timeout: 5000 }),
       ]);
     } catch {
       // Continue with verification even if navigation times out
@@ -263,7 +265,7 @@ export class LoginPage extends BasePage {
    */
   private async handleLoginFailure(): Promise<void> {
     await this.takeScreenshot("login-verification-failed");
-    
+
     const errors = await this.getErrorMessages();
     if (errors.length === 0) {
       await this.debugPageContent();
@@ -274,9 +276,14 @@ export class LoginPage extends BasePage {
    * Debug page content when no obvious errors are found
    */
   private async debugPageContent(): Promise<void> {
-    await this.page.textContent('body').catch(() => '');
-    
-    await this.page.locator('*:has-text("invalid"), *:has-text("error"), *:has-text("wrong"), *:has-text("failed")').all().catch(() => []);
+    await this.page.textContent("body").catch(() => "");
+
+    await this.page
+      .locator(
+        '*:has-text("invalid"), *:has-text("error"), *:has-text("wrong"), *:has-text("failed")'
+      )
+      .all()
+      .catch(() => []);
   }
 
   /**

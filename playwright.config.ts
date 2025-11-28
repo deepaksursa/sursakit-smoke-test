@@ -59,10 +59,12 @@ export default defineConfig({
     },
 
     // Video recording (only for CI failures)
-    video: process.env.CI ? {
-      mode: "retain-on-failure",
-      size: { width: 1280, height: 720 },
-    } : "off",
+    video: process.env.CI
+      ? {
+          mode: "retain-on-failure",
+          size: { width: 1280, height: 720 },
+        }
+      : "off",
 
     // Screenshot on failure
     screenshot: {
