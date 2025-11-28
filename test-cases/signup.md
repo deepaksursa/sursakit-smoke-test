@@ -4,6 +4,6 @@
 
 ## 📋 Test Cases
 
-| ID     | Scenario           | Expected Result                                    |
-| ------ | ------------------ | -------------------------------------------------- |
-| TC_003 | Valid Signup       | → Verification email sent → User can login        |
+| ID     | Scenario     | Expected Result                            |
+| ------ | ------------ | ------------------------------------------ |
+| TC_003 | Valid Signup | → Verification email sent → User can login |

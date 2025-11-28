@@ -5,6 +5,7 @@ import { HomePage } from "../pages/HomePage";
 import { EmailService } from "../utils/email-service";
 import { DataHelpers } from "../utils/test-helpers";
 import { Email } from "mailslurp-client";
+import { saveTestUser, markUserAsVerified } from "../utils/test-data";
 
 test.describe("Signup Functionality", () => {
   test(
@@ -42,6 +43,9 @@ test.describe("Signup Functionality", () => {
         // Verify redirect to home page after signup
         expect(signupPage.isOnSignupPage()).toBe(false);
         expect(homePage.isOnHomePage()).toBe(true);
+
+        // Save user credentials for future tests
+        saveTestUser(email, password, name, false);
       });
 
       await test.step("Wait for Verification Email", async () => {
@@ -63,6 +67,9 @@ test.describe("Signup Functionality", () => {
       await test.step("Click Verification Link and Verify", async () => {
         await page.goto(verificationLink);
         await page.waitForLoadState("networkidle");
+
+        // Mark user as verified in storage
+        markUserAsVerified(email);
       });
 
       await test.step("Verify User Can Login", async () => {

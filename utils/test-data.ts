@@ -60,3 +60,18 @@ export const validateCredentials = (): boolean => {
   const { username, password } = TestCredentials.validUser;
   return username !== "test@example.com" && password !== "password123";
 };
+
+/**
+ * Get saved test users from storage
+ * Use this to retrieve users created during signup tests
+ */
+export {
+  getSavedTestUsers,
+  getTestUserByEmail,
+  getVerifiedTestUsers,
+  getLatestTestUser,
+  getRandomVerifiedUser,
+  saveTestUser,
+  markUserAsVerified,
+  clearAllTestUsers,
+} from "./test-user-storage";

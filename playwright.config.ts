@@ -102,4 +102,8 @@ export default defineConfig({
 
   // All outputs go to test-results folder
   outputDir: "test-results/",
+
+  // Note: Global teardown removed - in-memory storage clears automatically
+  // when process ends. If you switch to file-based storage, re-enable:
+  // globalTeardown: "./global-teardown.ts",
 });
