@@ -1,5 +1,5 @@
 import { BasePage } from "./BasePage";
-import { Page, expect } from "@playwright/test";
+import { Page } from "@playwright/test";
 import path from "path";
 
 export class WorkspacePage extends BasePage {
@@ -23,8 +23,9 @@ export class WorkspacePage extends BasePage {
     super(page);
   }
 
-  async isOnWorkspacePage() {
-    await expect(this.page).toHaveURL(/\/s\/[a-z0-9]+$/);
+  async isOnWorkspacePage(): Promise<boolean> {
+    await this.page.waitForURL(/\/s\/[a-z0-9]+$/, { timeout: 10000 });
+    return this.page.url().match(/\/s\/[a-z0-9]+$/) !== null;
   }
 
   async clickOnAdd() {
@@ -33,11 +34,11 @@ export class WorkspacePage extends BasePage {
     console.log("Clicked on add.");
   }
 
-  async clickOnEmptyService() {
+  async clickOnEmptyService(): Promise<void> {
     const emptyServiceBtn = this.page.getByRole("menuitem", {
       name: "Empty service",
     });
-    await expect(emptyServiceBtn).toBeVisible();
+    await emptyServiceBtn.waitFor({ state: "visible", timeout: 10000 });
     await emptyServiceBtn.click();
     console.log("Clicked on empty service");
   }
@@ -65,12 +66,12 @@ export class WorkspacePage extends BasePage {
       `Creating service with name: ${serviceName.split(" ").join("-")}`
     );
     //verify service creation
-    await expect(
-      this.page.getByRole("button", {
+    await this.page
+      .getByRole("button", {
         name: `${serviceName.split(" ").join("-")}`,
         exact: true,
       })
-    ).toBeVisible();
+      .waitFor({ state: "visible", timeout: 10000 });
     console.log(`Service "${serviceName}" created successfully.`);
   }
 
@@ -102,14 +103,14 @@ export class WorkspacePage extends BasePage {
     const uploadFolderBtn = this.page.getByRole("menuitem", {
       name: "Upload Folder",
     });
-    await expect(uploadFolderBtn).toBeVisible();
+    await uploadFolderBtn.waitFor({ state: "visible", timeout: 10000 });
     await uploadFolderBtn.click();
     const fileChooser = await fileChooserPromise;
     const folderPath = path.resolve(__dirname, "../test-file/test-project");
     await fileChooser.setFiles(folderPath);
-    await expect(
-      this.page.getByRole("button", { name: "test-project", exact: true })
-    ).toBeVisible({ timeout: 20000 });
+    await this.page
+      .getByRole("button", { name: "test-project", exact: true })
+      .waitFor({ state: "visible", timeout: 20000 });
   }
 
   async clickFileTab(fileName: string) {
@@ -134,7 +135,7 @@ export class WorkspacePage extends BasePage {
       name: fileName,
       exact: true,
     });
-    await expect(newFileTab).toBeVisible();
+    await newFileTab.waitFor({ state: "visible", timeout: 10000 });
     console.log("File created");
   }
 
@@ -146,25 +147,24 @@ export class WorkspacePage extends BasePage {
     );
   }
 
-  async closeFileAndSave(fileName: string) {
+  async closeFileAndSave(fileName: string): Promise<void> {
     const closeButton = this.page.locator("button:has(svg.lucide-x)").nth(1);
     await closeButton.click();
-    await expect(
-      this.page.getByRole("alertdialog", { name: "Unsaved Changes" })
-    ).toBeVisible();
+    await this.page
+      .getByRole("alertdialog", { name: "Unsaved Changes" })
+      .waitFor({ state: "visible", timeout: 10000 });
     const saveButton = this.page.getByRole("button", {
       name: "Save",
       exact: true,
     });
     await saveButton.click();
     await this.clickFileTab(fileName);
-    await expect(
-      this.page
-        .getByRole("code")
-        .locator("div")
-        .filter({ hasText: "console.log('Hello World')" })
-        .nth(3)
-    ).toBeVisible();
+    await this.page
+      .getByRole("code")
+      .locator("div")
+      .filter({ hasText: "console.log('Hello World')" })
+      .nth(3)
+      .waitFor({ state: "visible", timeout: 10000 });
   }
 
   async refreshFiles() {
@@ -176,27 +176,23 @@ export class WorkspacePage extends BasePage {
     await refresFilesBtn.click();
   }
 
-  async addTerminal(serviceName: string) {
+  async addTerminal(serviceName: string): Promise<void> {
     const addTerminalButton = this.page.getByRole("button", {
       name: `Add ${serviceName.split(" ").join("-")} terminal`,
     });
     await addTerminalButton.click();
-    expect(
-      this.page
-        .getByRole("tab", {
-          name:
-            serviceName.length > 10
-              ? `${serviceName
-                  .split(" ")
-                  .join("-")
-                  .substring(0, 10)}... terminal`
-              : serviceName,
-        })
-        .first()
-    ).toBeVisible();
+    await this.page
+      .getByRole("tab", {
+        name:
+          serviceName.length > 10
+            ? `${serviceName.split(" ").join("-").substring(0, 10)}... terminal`
+            : serviceName,
+      })
+      .first()
+      .waitFor({ state: "visible", timeout: 10000 });
   }
 
-  async closeTerminal(serviceName: string) {
+  async closeTerminal(serviceName: string): Promise<void> {
     const closeTerminalButton = this.page.getByRole("button", {
       name:
         serviceName.length > 10
@@ -204,20 +200,20 @@ export class WorkspacePage extends BasePage {
           : serviceName,
     });
     await closeTerminalButton.click();
-    await expect(closeTerminalButton).toBeHidden();
+    await closeTerminalButton.waitFor({ state: "hidden", timeout: 10000 });
   }
 
-  async testTerminal() {
+  async testTerminal(): Promise<void> {
     const terminalInput = this.page.getByRole("textbox", {
       name: "Terminal input",
     });
-    await expect(terminalInput).toBeVisible();
+    await terminalInput.waitFor({ state: "visible", timeout: 10000 });
     await terminalInput.click();
     await this.page.keyboard.type("mkdir NewFolder");
     await this.page.keyboard.press("Enter");
     await this.refreshFiles();
-    await expect(
-      this.page.getByRole("button", { name: "NewFolder", exact: true })
-    ).toBeVisible();
+    await this.page
+      .getByRole("button", { name: "NewFolder", exact: true })
+      .waitFor({ state: "visible", timeout: 10000 });
   }
 }

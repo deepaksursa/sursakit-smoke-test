@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { Page, Locator } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 export class HomePage extends BasePage {
@@ -82,9 +82,9 @@ export class HomePage extends BasePage {
     await createOrgBtn.click();
   }
 
-  async isCreateOrgModalVisible() {
+  async isCreateOrgModalVisible(): Promise<boolean> {
     const modal = await this.waitForElement(this.orgNameInputSelectors);
-    expect(modal).toBeTruthy();
+    return modal !== null;
   }
 
   async fillOrgName(orgName: string): Promise<void> {
@@ -97,13 +97,14 @@ export class HomePage extends BasePage {
     await button.click();
   }
 
-  async verifyOrganizationCreation(name: string) {
+  async verifyOrganizationCreation(name: string): Promise<void> {
     const trigger = await this.findElement(this.orgDropDownTriggerSelectors);
     await trigger.click();
     const orgItem = this.page.locator('[role="menuitem"]', {
       hasText: name,
     });
-    await expect(orgItem).toBeVisible();
+    // Wait for organization to be visible
+    await orgItem.waitFor({ state: "visible", timeout: 10000 });
     //Choose the created organization
     await orgItem.click();
   }
@@ -135,9 +136,10 @@ export class HomePage extends BasePage {
       name: "Confirm Delete",
     });
     await confirmDeleteButton.click();
-    await expect(
-      this.page.getByRole("button", { name: "ai-power" })
-    ).toBeVisible();
+    // Wait for deletion to complete
+    await this.page
+      .getByRole("button", { name: "ai-power" })
+      .waitFor({ state: "visible", timeout: 10000 });
   }
 
   //Workspace Creation
@@ -147,9 +149,9 @@ export class HomePage extends BasePage {
     await button.click();
   }
 
-  async isCreateWorkSpaceModalVisible() {
+  async isCreateWorkSpaceModalVisible(): Promise<boolean> {
     const modal = await this.waitForElement(this.createWorkspaceInputSelectors);
-    expect(modal).toBeTruthy();
+    return modal !== null;
   }
 
   async fillWorkSpaceName(workspaceName: string) {
@@ -163,6 +165,6 @@ export class HomePage extends BasePage {
     await this.fillWorkSpaceName(workspaceName);
     await this.clickCreate();
     //check if user navigates inside the workspace to confirm workspace creation
-    await expect(this.page).toHaveURL(/\/s\/[a-z0-9]+$/);
+    await this.page.waitForURL(/\/s\/[a-z0-9]+$/, { timeout: 10000 });
   }
 }
