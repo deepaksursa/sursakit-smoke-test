@@ -1,7 +1,7 @@
-import { LoginPage } from "./../pages/LoginPage";
+import { LoginPage } from "../pages/LoginPage";
 import { test, expect } from "@playwright/test";
 import { HomePage } from "../pages/HomePage";
-import { TestCredentials } from "../utils/test-data";
+import { TestCredentials, getRandomVerifiedUser } from "../utils/test-data";
 
 test.describe("Login Functionality", () => {
   test(
@@ -12,7 +12,12 @@ test.describe("Login Functionality", () => {
     async ({ page }) => {
       const homePage = new HomePage(page);
       const loginPage = new LoginPage(page);
-      const credentials = TestCredentials.validUser;
+
+      // Use saved user from signup test or fallback to env credentials
+      const savedUser = getRandomVerifiedUser();
+      const credentials = savedUser
+        ? { username: savedUser.email, password: savedUser.password }
+        : TestCredentials.validUser;
 
       await test.step("Navigate to Homepage", async () => {
         await homePage.navigateToHome();
