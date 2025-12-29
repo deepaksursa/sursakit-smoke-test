@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import * as dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables
 dotenv.config();
@@ -11,6 +12,7 @@ dotenv.config();
 export default defineConfig({
   // Test directory configuration
   testDir: "./tests",
+  globalSetup: "./global-setup.ts",
 
   // Global test timeout (10 minutes)
   timeout: 10 * 60 * 1000,
@@ -96,6 +98,14 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
+      },
+    },
+    {
+      name:"owner",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1280, height: 720 },
+        storageState: path.join(process.cwd(), "auth", "auth-owner.json"),
       },
     },
   ],

@@ -23,6 +23,7 @@ coverage/
 auth-state.json
 *-auth-state.json
 .auth/
+auth/
 
 # Archives
 archives/
