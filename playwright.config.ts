@@ -12,7 +12,6 @@ dotenv.config();
 export default defineConfig({
   // Test directory configuration
   testDir: "./tests",
-  globalSetup: "./global-setup.ts",
 
   // Global test timeout (10 minutes)
   timeout: 10 * 60 * 1000,
@@ -93,20 +92,29 @@ export default defineConfig({
 
   // Test projects - Chrome Only
   projects: [
+    // Setup project - runs before all dependent projects
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts$/,
+      testDir: "./", // Look in root directory for setup file
+    },
     {
       name: "chromium",
+      testIgnore: /.*04_template-verification.*/, // Exclude template test (runs only on owner project)
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
       },
     },
     {
-      name:"owner",
+      name: "owner",
+      testMatch: /.*04_template-verification.*/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
         storageState: path.join(process.cwd(), "auth", "auth-owner.json"),
       },
+      dependencies: ["setup"], // ← Runs setup project first
     },
   ],
 
