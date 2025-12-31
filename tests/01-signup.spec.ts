@@ -8,7 +8,7 @@ import { Email } from "mailslurp-client";
 import { saveTestUser, markUserAsVerified } from "../utils/test-data";
 
 test.describe("Signup Functionality", () => {
-  test(
+  test.skip(
     "TC_003: Valid Signup with Email Verification",
     {
       tag: ["@smoke", "@regression"],

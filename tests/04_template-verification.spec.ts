@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { Dashboard } from "../pages/Dashboard";
-// import { WorkspacePage } from "../pages/WorkspacePage";
+import { WorkspacePage } from "../pages/WorkspacePage";
 
 /**
  * Template Verification Test
@@ -25,7 +25,7 @@ test.describe("Template Verification", () => {
     },
     async ({ page }) => {
       const dashboard = new Dashboard(page);
-      //const workspacePage = new WorkspacePage(page);
+      const workspacePage = new WorkspacePage(page);
 
       // Step 1: Navigate to dashboard (already logged in via saved auth state)
       await test.step("Navigate to Dashboard", async () => {
@@ -50,30 +50,39 @@ test.describe("Template Verification", () => {
       });
 
       // Step 4: Verify workspace is created (navigation happens)
-      // await test.step("Verify Workspace Created", async () => {
-      //   // Wait for URL to change to workspace pattern
-      //   await page.waitForURL(/\/s\/[a-z0-9]+$/, { timeout: 30000 });
+      await test.step("Verify Workspace Created", async () => {
+        // Note: clickTemplateUseButton() already waits for URL change,
+        // but we verify here to ensure workspace creation succeeded
 
-      //   // Verify we're on workspace page
-      //   const isOnWorkspace = await workspacePage.isOnWorkspacePage();
-      //   expect(isOnWorkspace).toBe(true);
-      // });
+        // Wait for URL to change to workspace pattern (explicit wait for condition)
+        await page.waitForURL(/\/s\/[a-z0-9]+$/, { timeout: 30000 });
 
-      // // Step 5: Verify all 3 services are created
-      // await test.step("Verify Services Created", async () => {
-      //   const expectedServices = ["frontend", "backend", "database"];
+        // Verify we're on workspace page using page object method
+        const isOnWorkspace = await workspacePage.isOnWorkspacePage();
+        expect(isOnWorkspace).toBe(true);
 
-      //   for (const serviceName of expectedServices) {
-      //     // Service names might be formatted (e.g., "frontend" -> "frontend")
-      //     const serviceButton = page.getByRole("button", {
-      //       name: serviceName,
-      //       exact: false,
-      //     });
+        // Additional verification: Check URL pattern matches
+        const currentUrl = page.url();
+        expect(currentUrl).toMatch(/\/s\/[a-z0-9]+$/);
+      });
 
-      //     await serviceButton.waitFor({ state: "visible", timeout: 10000 });
-      //     expect(await serviceButton.isVisible()).toBe(true);
-      //   }
-      // });
+      // Step 5: Verify all 3 services are created
+      await test.step("Verify Services Created", async () => {
+        const expectedServices = [
+          "employee-info-app",
+          "employee-info-api",
+          "production-db",
+        ];
+        const allServicesExist =
+          await workspacePage.verifyServicesExist(expectedServices);
+        expect(allServicesExist).toBe(true);
+      });
+
+      // Step 6: Verify Run button is visible
+      await test.step("Verify Run Button is Visible", async () => {
+        const isRunButtonVisible = await workspacePage.verifyRunButton();
+        expect(isRunButtonVisible).toBe(true);
+      });
     }
   );
 });

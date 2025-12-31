@@ -216,4 +216,48 @@ export class WorkspacePage extends BasePage {
       .getByRole("button", { name: "NewFolder", exact: true })
       .waitFor({ state: "visible", timeout: 10000 });
   }
+
+  /**
+   * Verify that specific services exist on the workspace page
+   * Used to verify services created by template
+   * Stops at first failure (fail-fast approach) since test will fail anyway
+   * @param serviceNames - Array of service names to verify (e.g., ["frontend", "backend", "database"])
+   * @returns true if all services are visible, false if any service is missing
+   */
+  async verifyServicesExist(serviceNames: string[]): Promise<boolean> {
+    for (const serviceName of serviceNames) {
+      try {
+        // Service names might be formatted (e.g., "frontend" -> "frontend")
+        const serviceButton = this.page.getByRole("button", {
+          name: serviceName,
+          exact: true,
+        });
+        await serviceButton.waitFor({ state: "visible", timeout: 10000 });
+        const isVisible = await serviceButton.isVisible();
+        if (!isVisible) {
+          console.log(`⚠️ Service "${serviceName}" is not visible`);
+          return false; // Fail fast - stop checking if one service is missing
+        }
+      } catch (error) {
+        console.log(`⚠️ Service "${serviceName}" not found: ${error}`);
+        return false; // Fail fast - stop checking if one service fails
+      }
+    }
+
+    return true; // All services exist
+  }
+
+  /**
+   * Check if the Run button is visible on the workspace page
+   * @returns true if Run button is visible, false otherwise
+   */
+  async verifyRunButton(): Promise<boolean> {
+    try {
+      const runButton = this.page.getByRole("button", { name: "Run" });
+      await runButton.waitFor({ state: "visible", timeout: 10000 });
+      return true; // If waitFor succeeds, button is visible
+    } catch {
+      return false; // Timeout or element not found
+    }
+  }
 }

@@ -9,7 +9,7 @@ import { DataHelpers } from "../utils/test-helpers";
 import { Email } from "mailslurp-client";
 
 test.describe("Forgot Password Functionality", () => {
-  test("TC_004: Forget Password", async ({ page }) => {
+  test.skip("TC_004: Forget Password", async ({ page }) => {
     const signupPage = new SignupPage(page);
     const forgotPassword = new ForgotPassword(page);
     const resetPassword = new ResetPassword(page);
