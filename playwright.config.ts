@@ -24,8 +24,16 @@ export default defineConfig({
   // Retry configuration for flaky tests
   retries: process.env.CI ? 2 : 1,
 
-  // Parallel execution workers (currently only 1 active test, so no benefit)
-  workers: 1,
+  // Parallel execution workers
+  // Run tests in parallel for faster execution
+  // Tests are independent: login (no auth) and template verification (with auth) can run simultaneously
+  // With 2 workers: setup runs first, then chromium and owner projects run in parallel
+  workers: process.env.CI ? 2 : undefined,
+  fullyParallel: true,
+
+  // Maximum number of test failures before stopping
+  // Prevents one failing test from blocking others
+  maxFailures: process.env.CI ? 10 : 5,
 
   // Simple HTML reporter only
   reporter: [["html", { outputFolder: "reports", open: "never" }], ["list"]],
@@ -90,7 +98,24 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
   },
 
-  // Test projects - Chrome Only
+  // Test projects - Parallel Execution Strategy
+  //
+  // Execution Flow:
+  // 1. "setup" project runs first (authenticates and saves auth state)
+  // 2. After setup completes, "chromium" and "owner" projects run in PARALLEL
+  //    - "chromium": Tests without auth (login, signup, forgot password)
+  //    - "owner": Tests with auth (template verification)
+  //
+  // Why parallel execution works:
+  // - "chromium" project: No dependencies, can run immediately
+  // - "owner" project: Depends on "setup" (waits for auth state), then runs
+  // - Both projects are independent (different test files, different auth states)
+  // - With workers: 2, both projects can execute simultaneously
+  //
+  // Active Tests Distribution:
+  // - chromium project: 02-login.spec.ts (2 tests: valid login, invalid login)
+  // - owner project: 04_template-verification.spec.ts (1 test: template verification)
+  // - Skipped: 01-signup.spec.ts, 03-forgotpassword.spec.ts (MailSlurp limit)
   projects: [
     // Setup project - runs before all dependent projects
     {
@@ -100,6 +125,8 @@ export default defineConfig({
     },
     {
       name: "chromium",
+      // Tests without authentication (login, signup, forgot password)
+      // These can run in parallel with "owner" project
       testIgnore: /.*04_template-verification.*/, // Exclude template test (runs only on owner project)
       use: {
         ...devices["Desktop Chrome"],
@@ -108,6 +135,9 @@ export default defineConfig({
     },
     {
       name: "owner",
+      // Tests with authentication (template verification)
+      // Uses saved auth state from setup project
+      // Can run in parallel with "chromium" project
       testMatch: /.*04_template-verification.*/,
       use: {
         ...devices["Desktop Chrome"],
