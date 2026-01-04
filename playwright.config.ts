@@ -22,7 +22,7 @@ export default defineConfig({
   },
 
   // Retry configuration for flaky tests
-  retries: process.env.CI ? 2 : 1,
+  retries: 1,
 
   // Parallel execution workers
   // Run tests in parallel for faster execution

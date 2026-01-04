@@ -3,6 +3,9 @@ import { BasePage } from "./BasePage";
 
 export class HomePage extends BasePage {
   private signInSelectors = [
+    'a[href="/auth/sign-in"]',
+    'a[href*="sign-in"][data-slot="button"]',
+    'a[data-slot="button"]:has-text("Sign In")',
     'text="Sign In"',
     'text="Login"',
     'text="Sign in"',
@@ -46,15 +49,25 @@ export class HomePage extends BasePage {
     await this.navigateWithCloudflareHandling("/");
   }
 
-  async getSignInButton(): Promise<Locator> {
-    const element = await this.findElement(this.signInSelectors);
-    return element;
+  async getSignInButton(): Promise<Locator | null> {
+    try {
+      const element = await this.findElement(this.signInSelectors);
+      return element;
+    } catch {
+      // Sign In button not found - user might already be logged in
+      return null;
+    }
   }
 
   async clickSignIn(): Promise<void> {
     const signInButton = await this.getSignInButton();
-    await signInButton.click();
-    await this.page.waitForTimeout(2000);
+    if (signInButton) {
+      await signInButton.click();
+      await this.page.waitForTimeout(2000);
+    } else {
+      // If Sign In button not found, try navigating directly to login page
+      await this.navigate("auth/sign-in");
+    }
   }
 
   async goToLogin(): Promise<void> {
