@@ -25,10 +25,10 @@ test.describe("Login Functionality", () => {
 
       await test.step("Navigate to Login Page", async () => {
         await homePage.goToLogin();
-        await loginPage.waitForCloudflareChallenge();
       });
 
       await test.step("Perform Login and Verify", async () => {
+        // Note: performLogin() -> login() already waits for Cloudflare challenge before filling
         const loginSuccess = await loginPage.performLogin(
           credentials.username,
           credentials.password

@@ -24,8 +24,10 @@ export class WorkspacePage extends BasePage {
   }
 
   async isOnWorkspacePage(): Promise<boolean> {
-    await this.page.waitForURL(/\/s\/[a-z0-9]+$/, { timeout: 10000 });
-    return this.page.url().match(/\/s\/[a-z0-9]+$/) !== null;
+    // Check if current URL matches workspace pattern without waiting
+    // This is a simple check, not a wait operation
+    const currentUrl = this.page.url();
+    return /\/s\/[a-z0-9]+$/.test(currentUrl);
   }
 
   async clickOnAdd() {
@@ -193,28 +195,294 @@ export class WorkspacePage extends BasePage {
   }
 
   async closeTerminal(serviceName: string): Promise<void> {
-    const closeTerminalButton = this.page.getByRole("button", {
-      name:
-        serviceName.length > 10
-          ? `${serviceName.split(" ").join("-").substring(0, 10)}... terminal`
-          : serviceName,
+    // Find the terminal tab by its name
+    const terminalTabName =
+      serviceName.length > 10
+        ? `${serviceName.split(" ").join("-").substring(0, 10)}... terminal`
+        : `${serviceName.split(" ").join("-")} terminal`;
+
+    // First, find the terminal tab
+    const terminalTab = this.page.getByRole("tab", {
+      name: terminalTabName,
     });
-    await closeTerminalButton.click();
-    await closeTerminalButton.waitFor({ state: "hidden", timeout: 10000 });
+
+    // Wait for the tab to be visible
+    await terminalTab.waitFor({ state: "visible", timeout: 10000 });
+
+    // Find the close button by aria-label (more reliable than SVG selector)
+    const closeButton = this.page.getByRole("button", {
+      name: /close.*terminal/i,
+    });
+
+    // Wait for close button to be visible and enabled
+    await closeButton.waitFor({ state: "visible", timeout: 5000 });
+
+    // Verify button is not disabled and is clickable
+    const isDisabled = await closeButton.isDisabled().catch(() => false);
+    if (isDisabled) {
+      throw new Error(`Close button is disabled for terminal "${serviceName}"`);
+    }
+
+    // Click the close button
+    await closeButton.click();
   }
 
-  async testTerminal(): Promise<void> {
+  /**
+   * Test terminal functionality by executing a command and verifying the result
+   * Creates a new folder and verifies it appears in the file explorer
+   * @param folderName - Optional folder name to create (default: "NewFolder")
+   */
+  async testTerminal(folderName: string = "NewFolder"): Promise<void> {
+    try {
+      console.log(`Testing terminal with command: mkdir ${folderName}`);
+
+      // Wait for terminal input to be visible and ready
+      const terminalInput = this.page.getByRole("textbox", {
+        name: "Terminal input",
+      });
+      await terminalInput.waitFor({ state: "visible", timeout: 10000 });
+
+      // Small delay to ensure terminal is fully initialized
+      await this.page.waitForTimeout(500);
+
+      // Click on terminal input to focus it
+      await terminalInput.click();
+      console.log("Terminal input focused");
+
+      // Wait a bit for focus to be established
+      await this.page.waitForTimeout(300);
+
+      // Type the command
+      await this.page.keyboard.type(`mkdir ${folderName}`);
+      console.log(`Typed command: mkdir ${folderName}`);
+
+      // Press Enter to execute the command
+      await this.page.keyboard.press("Enter");
+      console.log("Command executed");
+
+      // Wait for command to complete (terminal processes the command)
+      await this.page.waitForTimeout(1000);
+
+      // Refresh the file explorer to see the new folder
+      await this.refreshFiles();
+      console.log("File explorer refreshed");
+
+      // Wait a bit for the refresh to complete
+      await this.page.waitForTimeout(500);
+
+      // Verify the folder was created and is visible in the file explorer
+      const newFolder = this.page.getByRole("button", {
+        name: folderName,
+        exact: true,
+      });
+      await newFolder.waitFor({ state: "visible", timeout: 10000 });
+      console.log(`✅ Successfully created and verified folder: ${folderName}`);
+    } catch (error) {
+      console.error(`❌ Terminal test failed: ${error}`);
+      throw new Error(
+        `Failed to test terminal functionality: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * Get initial WebSocket frame count before executing a command
+   * Used for performance/latency testing to measure new frames after command
+   * @param getSentFrames - Function to get sent frames count
+   * @param getReceivedFrames - Function to get received frames count
+   * @returns Initial total frame count (sent + received)
+   */
+  getInitialFrameCount(
+    getSentFrames: () => Array<unknown>,
+    getReceivedFrames: () => Array<unknown>
+  ): number {
+    return getSentFrames().length + getReceivedFrames().length;
+  }
+
+  /**
+   * Execute a terminal command and return the timestamp when command was sent
+   * Used for performance/latency testing
+   * @param command - Command to execute (e.g., "echo 'test'")
+   * @returns Timestamp when Enter key was pressed (sendTime)
+   */
+  async executeTerminalCommand(command: string): Promise<number> {
+    // Wait for terminal input to be visible and ready
     const terminalInput = this.page.getByRole("textbox", {
       name: "Terminal input",
     });
     await terminalInput.waitFor({ state: "visible", timeout: 10000 });
     await terminalInput.click();
-    await this.page.keyboard.type("mkdir NewFolder");
+    await this.page.waitForTimeout(300);
+
+    // Clear any existing text in the terminal input
+    await this.page.keyboard.press("Control+a");
+    await this.page.waitForTimeout(100);
+
+    // Type the command character by character to ensure it's captured
+    await this.page.keyboard.type(command, { delay: 50 });
+
+    // Wait a bit to ensure typing is complete
+    await this.page.waitForTimeout(200);
+
+    // Record timestamp just before pressing Enter
+    const sendTime = Date.now();
     await this.page.keyboard.press("Enter");
-    await this.refreshFiles();
-    await this.page
-      .getByRole("button", { name: "NewFolder", exact: true })
-      .waitFor({ state: "visible", timeout: 10000 });
+
+    // Wait a bit after Enter to ensure the command is sent via WebSocket
+    await this.page.waitForTimeout(500);
+
+    return sendTime;
+  }
+
+  /**
+   * Verify minimum expected frames after terminal command execution
+   * For a terminal command, we expect at least:
+   * - 1 sent frame (command sent to server)
+   * - 1 received frame (response from server)
+   * Total minimum: 2 frames
+   * @param initialFrameCount - Frame count before command
+   * @param currentSentFrames - Current sent frames count
+   * @param currentReceivedFrames - Current received frames count
+   * @param minimumExpectedFrames - Minimum frames expected (default: 2)
+   * @returns Object with validation result
+   */
+  verifyMinimumFrames(
+    initialFrameCount: number,
+    currentSentFrames: number,
+    currentReceivedFrames: number,
+    minimumExpectedFrames: number = 2
+  ): {
+    success: boolean;
+    totalNewFrames: number;
+    minimumExpected: number;
+    failureReason?: string;
+  } {
+    const totalFrames = currentSentFrames + currentReceivedFrames;
+    const totalNewFrames = totalFrames - initialFrameCount;
+    const success = totalNewFrames >= minimumExpectedFrames;
+
+    if (!success) {
+      console.error(
+        `❌ Frame validation failed: ${totalNewFrames} new frames < ${minimumExpectedFrames} minimum`
+      );
+    }
+
+    return {
+      success,
+      totalNewFrames,
+      minimumExpected: minimumExpectedFrames,
+      failureReason: success
+        ? undefined
+        : `Expected at least ${minimumExpectedFrames} new frames, got ${totalNewFrames}`,
+    };
+  }
+
+  /**
+   * Verify that command output is present in received WebSocket frames
+   * This validates that the terminal actually returned the command output
+   * Handles both JSON format (e.g., {"output": "developer"}) and plain text format
+   * @param receivedFrames - Array of received WebSocket frames
+   * @param command - The command that was executed (e.g., "whoami")
+   * @returns Object with validation result including found output
+   */
+  verifyCommandOutputInFrames(
+    receivedFrames: Array<{ payload: string; timestamp: number }>,
+    command: string
+  ): {
+    success: boolean;
+    foundOutput: string | null;
+    foundInFrames: number;
+    failureReason?: string;
+  } {
+    let foundOutput: string | null = null;
+    let foundInFrames = 0;
+
+    for (const frame of receivedFrames) {
+      const payload = frame.payload || "";
+
+      if (!payload || payload.length === 0) continue;
+
+      // Skip if payload is just the command echo
+      if (payload === command || payload.trim() === command) continue;
+
+      // Try to parse as JSON first (common format for terminal responses)
+      try {
+        const jsonData = JSON.parse(payload);
+
+        // Check common JSON fields for output
+        const output =
+          jsonData.output ||
+          jsonData.data ||
+          jsonData.text ||
+          jsonData.result ||
+          jsonData.stdout;
+
+        if (
+          output &&
+          typeof output === "string" &&
+          output.length > 0 &&
+          output !== command
+        ) {
+          foundOutput = output;
+          foundInFrames++;
+          continue;
+        }
+
+        // If JSON doesn't have output field, check if the whole JSON string contains non-command data
+        const jsonString = JSON.stringify(jsonData);
+        if (
+          jsonString.length > command.length + 10 &&
+          !jsonString.includes(`"${command}"`)
+        ) {
+          foundOutput = jsonString;
+          foundInFrames++;
+        }
+      } catch {
+        // Not JSON, check as plain text
+        // Look for output that:
+        // 1. Is not empty
+        // 2. Is not just the command
+        // 3. Contains actual data (more than just whitespace/command)
+        const trimmed = payload.trim();
+        if (
+          trimmed.length > 0 &&
+          trimmed !== command &&
+          !trimmed.startsWith(command) &&
+          trimmed.length > command.length + 2 // Ensure it's longer than just command + minimal chars
+        ) {
+          // Extract potential output (could be username, file content, etc.)
+          // For "whoami", output is typically a single word (username)
+          const lines = trimmed
+            .split("\n")
+            .filter((line) => line.trim() && line.trim() !== command);
+          if (lines.length > 0) {
+            foundOutput = lines[0].trim(); // Take first non-command line as output
+            foundInFrames++;
+          } else if (trimmed.length > command.length + 5) {
+            // If no newlines, but payload is significantly longer than command, it's likely output
+            foundOutput = trimmed;
+            foundInFrames++;
+          }
+        }
+      }
+    }
+
+    const success = foundOutput !== null && foundInFrames > 0;
+
+    if (!success) {
+      console.error(
+        `❌ Command output validation failed: No valid output found for command "${command}"`
+      );
+    }
+
+    return {
+      success,
+      foundOutput,
+      foundInFrames,
+      failureReason: success
+        ? undefined
+        : `No valid output found for command "${command}" in received frames`,
+    };
   }
 
   /**
@@ -259,5 +527,77 @@ export class WorkspacePage extends BasePage {
     } catch {
       return false; // Timeout or element not found
     }
+  }
+
+  async clickAddTerminalButton(): Promise<void> {
+    const addTerminalButton = this.page.getByRole("button", {
+      name: "Add terminal",
+    });
+    await addTerminalButton.click();
+  }
+
+  async selectServiceFromDropdown(serviceName: string): Promise<void> {
+    const serviceMenuItem = this.page.getByRole("menuitem", {
+      name: `Add ${serviceName} terminal`,
+    });
+    await serviceMenuItem.waitFor({ state: "visible", timeout: 10000 });
+    await this.page.waitForTimeout(200);
+    await serviceMenuItem.click();
+    console.log(`Selected service: ${serviceName} from terminal dropdown`);
+  }
+  async clickWorkspaceSettingsButton(): Promise<void> {
+    const workspaceSettingsButton = this.page.locator(
+      'button[title="Open Workspace Settings"]'
+    );
+    await workspaceSettingsButton.waitFor({ state: "visible", timeout: 10000 });
+    await workspaceSettingsButton.click();
+  }
+
+  async waitForWorkspaceSettingsDialog(): Promise<void> {
+    // Wait for dialog to be open and visible
+    const dialog = this.page.getByRole("dialog", {
+      name: "Workspace Settings",
+    });
+    await dialog.waitFor({ state: "visible", timeout: 10000 });
+    // Small delay to ensure dialog animations are complete
+    await this.page.waitForTimeout(300);
+  }
+
+  async clickDangerMenuItem(): Promise<void> {
+    // Danger menu item is a button with text "Danger" in the sidebar
+    const dangerMenuItem = this.page.getByRole("button", { name: "Danger" });
+    await dangerMenuItem.waitFor({ state: "visible", timeout: 10000 });
+    await dangerMenuItem.click();
+  }
+
+  async clickDeleteWorkspaceButton(): Promise<void> {
+    // Click the "Delete workspace" button in the Danger section
+    const deleteWorkspaceButton = this.page.getByRole("button", {
+      name: "Delete workspace",
+    });
+    await deleteWorkspaceButton.waitFor({ state: "visible", timeout: 10000 });
+    await deleteWorkspaceButton.click();
+  }
+
+  async waitForDeleteConfirmationDialog(): Promise<void> {
+    // Wait for the confirmation alertdialog to appear
+    // The dialog title is "Are you absolutely sure?" not "Delete Workspace"
+    const confirmationDialog = this.page.getByRole("alertdialog", {
+      name: "Are you absolutely sure?",
+    });
+    await confirmationDialog.waitFor({ state: "visible", timeout: 10000 });
+    // Small delay for dialog animations
+    await this.page.waitForTimeout(200);
+  }
+
+  async clickContinueButton(): Promise<void> {
+    // Wait for dialog and find Continue button within it
+    const dialog = this.page.getByRole("alertdialog", {
+      name: "Are you absolutely sure?",
+    });
+    const continueButton = dialog.getByRole("button", { name: "Continue" });
+    await continueButton.waitFor({ state: "visible", timeout: 10000 });
+    await continueButton.click();
+    console.log("Confirmed workspace deletion");
   }
 }

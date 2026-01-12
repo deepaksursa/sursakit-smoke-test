@@ -22,7 +22,6 @@ export class Dashboard extends BasePage {
    */
   async navigateToDashboard(): Promise<void> {
     await this.navigate("/");
-    await this.page.waitForLoadState("networkidle");
   }
 
   /**

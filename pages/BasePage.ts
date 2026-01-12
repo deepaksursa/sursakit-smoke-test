@@ -18,10 +18,12 @@ export class BasePage {
 
   /**
    * Navigate to a specific URL
+   * Uses "domcontentloaded" instead of "networkidle" for better reliability
+   * (networkidle can timeout with continuous WebSocket connections or polling)
    */
   async navigate(url: string): Promise<void> {
-    await this.page.goto(url);
-    await this.page.waitForLoadState("networkidle");
+    await this.page.goto(url, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("domcontentloaded");
   }
 
   /**
@@ -60,14 +62,15 @@ export class BasePage {
   async findElement(selectors: string[]): Promise<Locator> {
     for (const selector of selectors) {
       const element = this.page.locator(selector).first();
-      if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
         return element;
       }
     }
+    // Provide more helpful error message with current page context
+    const currentUrl = this.page.url();
     throw new Error(
-      `Element not found. None of the selectors matched or visible: ${selectors.join(
-        ", "
-      )}`
+      `Element not found. None of the selectors matched or visible: ${selectors.join(", ")}\n` +
+        `Current URL: ${currentUrl}`
     );
   }
 
